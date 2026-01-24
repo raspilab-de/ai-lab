@@ -1,0 +1,204 @@
+services:
+  openwebui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: openwebui
+    restart: unless-stopped
+    volumes:
+      - open-webui:/app/backend/data
+    networks:
+      - ai-lab
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/"]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - ./ollama:/root/.ollama
+    networks:
+      - ai-lab
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n
+    container_name: n8n
+    restart: unless-stopped
+    environment:
+      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_HOST=n8n.${SUBDOMAIN}.${DOMAIN_NAME}
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=https
+      - N8N_RUNNERS_ENABLED=true
+      - N8N_SECURE_COOKIE=true
+      - NODES_EXCLUDE="[]"
+      - NODE_ENV=production
+      - WEBHOOK_URL=http://n8n:5678/
+      - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
+      - TZ=${GENERIC_TIMEZONE}
+      - QUEUE_HEALTH_CHECK_ACTIVE=true
+    volumes:
+      - n8n_data:/home/node/.n8n
+      - ./${SHARED_FOLDER}/${IMAGE_FOLDER}:/home/node/.n8n-files/docling
+    networks:
+      - ai-lab
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"require('http').get('http://localhost:5678/healthz/readiness',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1));\""
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 20
+      start_period: 30s
+
+  postgres:
+    image: ankane/pgvector
+    container_name: postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - ai-lab
+
+  minio:
+#   image: minio/minio:RELEASE.2025-04-22T22-12-26Z
+    image: quay.io/minio/aistor/minio
+    container_name: minio
+    restart: unless-stopped
+    ports:
+      - 9001:9001
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_DEFAULT_BUCKETS=buck1
+      - MINIO_SERVER_URL=https://s3.${SUBDOMAIN}.${DOMAIN_NAME}
+      - MINIO_BROWSER_REDIRECT_URL=http://${SUBDOMAIN}.${DOMAIN_NAME}:9001
+    networks:
+      - ai-lab
+    volumes:
+      - minio_data:/data
+      - ./minio.license:/minio.license
+
+    command: server /data --license "/minio.license" --console-address ":9001"
+
+  minio-health:
+    image: curlimages/curl:8.10.1
+    container_name: minio-health
+    restart: unless-stopped
+    depends_on:
+      - minio
+    networks:
+      - ai-lab
+    # Container bleibt laufen, aber macht nichts außer "da sein"
+    command: ["sh", "-c", "sleep infinity"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://minio:9000/minio/health/ready >/dev/null || exit 1"]
+      interval: 10s
+      timeout: 3s
+      retries: 30
+      start_period: 20s
+
+  docling:
+    image: ghcr.io/docling-project/docling-serve:main
+    container_name: docling
+    restart: unless-stopped
+    # Run as root to fix bind mount permissions on Windows
+    user: root
+    # Override working directory so referenced images are saved to shared folder
+    working_dir: /${SHARED_FOLDER}/${IMAGE_FOLDER}
+    environment:
+      - DOCLING_SERVE_ENABLE_UI=false
+      # Store extracted images in shared folder accessible by other services
+      - DOCLING_SERVE_SCRATCH_PATH=/${SHARED_FOLDER}/${IMAGE_FOLDER}
+      # Keep results after retrieval so other services can access them
+      - DOCLING_SERVE_SINGLE_USE_RESULTS=false
+      # Gradio security: allow writing to /shared directory
+      - GRADIO_ALLOWED_PATHS=/${SHARED_FOLDER}
+      - GRADIO_TEMP_DIR=/${SHARED_FOLDER}/docling-scratch
+      - DOCLING_SERVE_ENABLE_REMOTE_SERVICES=true
+      # Wait-Time for Sync Jobs: 30Min
+      - DOCLING_SERVE_MAX_SYNC_WAIT=1800
+    volumes:
+      - docling_data:/data
+      - ./shared:/shared
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - ai-lab
+
+  nginx:
+    image: openresty/openresty:alpine-fat
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN_NAME}
+      - HOST=${HOST}
+      - UPSTREAM_OPENWEBUI=${UPSTREAM_OPENWEBUI}
+      - UPSTREAM_N8N=${UPSTREAM_N8N}
+      - UPSTREAM_S3=${UPSTREAM_S3}
+    volumes:
+      - ./nginx/render.sh:/render.sh:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:rw
+      - ./nginx/templates:/etc/nginx/templates:ro
+      - ./nginx/snippets:/etc/nginx/snippets:ro
+      - ./certbot/www:/var/www/certbot:ro
+      - ./letsencrypt:/etc/letsencrypt:ro
+      - ./minio-jwt-keys:/etc/nginx/keys
+      - ./workflows:/var/www/workflows:ro
+      - ./functions:/var/www/functions:ro
+    networks:
+      - ai-lab
+    command: ["/bin/sh", "/render.sh"]
+    depends_on:
+      openwebui:
+        condition: service_healthy
+      n8n:
+        condition: service_healthy
+      minio-health:
+        condition: service_healthy
+
+  certbot:
+    image: certbot/certbot:latest
+    container_name: certbot
+    volumes:
+      - ./certbot/www:/var/www/certbot
+      - ./letsencrypt:/etc/letsencrypt
+    entrypoint: /bin/sh -c
+    command: >
+      "trap exit TERM;
+       while :; do
+         certbot renew --webroot -w /var/www/certbot --quiet;
+         sleep 12h;
+       done"
+    networks:
+      - ai-lab
+
+volumes:
+  open-webui:
+  n8n_data:
+  postgres_data:
+  minio_data:
+  docling_data:
+
+networks:
+  ai-lab:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.10.0/24

@@ -1,0 +1,3014 @@
+{
+  "name": "GitLab Ai Agent",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Chat Input (Open-WebUI)",
+        "height": 433,
+        "width": 588
+      },
+      "id": "e026f69e-cfdf-4400-90c6-0f79b8a8d728",
+      "name": "Sticky Note2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "id": "f21b21df-5633-44b9-8f50-2354d205db25",
+      "name": "When chat message received",
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        80
+      ],
+      "webhookId": "e11ff0fb-b75f-4593-a0ab-0cf767bcec60"
+    },
+    {
+      "parameters": {
+        "content": "## Datenbank-Tabellen erstellen\nEinmalig ausführen",
+        "height": 380,
+        "width": 456,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -16,
+        800
+      ],
+      "typeVersion": 1,
+      "id": "29e2caf9-1729-476a-b30b-a153bef9636e",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM document_metadata WHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{ $('Old Files').item.json.id }}"
+        }
+      },
+      "id": "8d68cb5d-7b68-4e41-9dd5-2cb26cf2455f",
+      "name": "Delete Metadata",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1760,
+        2240
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "c7ab7071-12a9-4c61-9127-e99d760e0299",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        48,
+        288
+      ],
+      "id": "90c7d2e0-eaa7-4676-85f8-4667ba42c597",
+      "name": "Webhook",
+      "webhookId": "c7ab7071-12a9-4c61-9127-e99d760e0299",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "7DRz9ORMF0ooORf9",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM document_metadata;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        256,
+        2208
+      ],
+      "id": "b0d2aec1-d2ba-4009-8e10-7cb29099909c",
+      "name": "List all Files in Postgres",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "id": "78dc3d6d-35e6-45a5-aa40-53047f93b744",
+      "name": "Check Every 10 Minutes",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        48,
+        2208
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "list",
+        "owner": "={{ $json.owner.username }}",
+        "repository": "={{ $('Normalize Input').first().json.project }}",
+        "returnAll": true,
+        "additionalParameters": {
+          "ref": "main",
+          "recursive": true
+        }
+      },
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1,
+      "position": [
+        704,
+        1488
+      ],
+      "id": "5f3966f6-e46e-49d4-a773-77824eb65241",
+      "name": "List files",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Inputs\nconst gitlabItems = $('Normailze Data').all().map(i => i.json);\nconst postgresRows = $('List Postgres Documents').all().map(i => i.json);\n\n// Hilfsfunktion: Zeitstempel in Millisekunden parsen\nfunction parseTimeMs(s) {\n  if (!s) return null;\n  const t = Date.parse(String(s));\n  return Number.isFinite(t) ? t : null;\n}\n\n// Build lookup: Postgres by ID (eindeutig!)\nconst pgById = new Map();\nfor (const row of postgresRows) {\n  if (!row || !row.id) continue;\n  pgById.set(row.id, {\n    id: row.id,\n    lastModifiedMs: parseTimeMs(row.last_modified),\n    raw: row,\n  });\n}\n\n// Compare GitLab items against Postgres\nconst updatedOrNew = [];\n\nfor (const file of gitlabItems) {\n  if (!file || !file.id) continue;\n  \n  // Lookup direkt über die eindeutige ID\n  const pgRec = pgById.get(file.id);\n  \n  if (!pgRec) {\n    // Neu: ID existiert nicht in Postgres\n    updatedOrNew.push({\n      json: {\n        ...file,\n        _changeReason: 'new',\n      },\n    });\n    continue;\n  }\n  \n  // ID existiert → prüfe ob geändert (via lastModified)\n  const glLMms = parseTimeMs(file.lastModified);\n  const pgLMms = pgRec.lastModifiedMs;\n  \n  let sameLM = false;\n  if (pgLMms != null && glLMms != null) {\n    // Toleranz von 1 Sekunde für Rundungsfehler\n    const diff = Math.abs(pgLMms - glLMms);\n    sameLM = diff <= 1000;\n  }\n  \n  if (!sameLM) {\n    // Geändert: lastModified unterscheidet sich\n    updatedOrNew.push({\n      json: {\n        ...file,\n        _changeReason: 'modified',\n        _debug: {\n          glLMms,\n          pgLMms,\n          diffMs: glLMms && pgLMms ? Math.abs(glLMms - pgLMms) : null,\n        },\n      },\n    });\n  }\n  // Sonst: unverändert → nicht in Output\n}\n\nreturn updatedOrNew;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        1488
+      ],
+      "id": "53a25184-6e05-4f1e-8f70-cc16af7f8a53",
+      "name": "Check if new files or updated files1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "5cc16be5-fbbe-40e1-8522-021c4efc1212",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "blob",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        1488
+      ],
+      "id": "be1be350-013b-4c22-9689-deeb74519738",
+      "name": "Gitlab Files"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1696,
+        1488
+      ],
+      "id": "210fce6a-72ab-4fd8-aa7c-6a8ec007bdec",
+      "name": "Loop Over Items2"
+    },
+    {
+      "parameters": {
+        "resource": "repository",
+        "operation": "get",
+        "owner": "={{ $json.owner }}",
+        "repository": "={{ $json.project }}"
+      },
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1,
+      "position": [
+        400,
+        1472
+      ],
+      "id": "55476380-b4f4-4297-93fc-6c26bc96498f",
+      "name": "Get a repository",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.content || $json.data || $json.text || $json.concatenated_data || $json.markdown}}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "file_id",
+                "value": "={{ $json.id }}"
+              },
+              {
+                "name": "file_title",
+                "value": "={{ $('Loop Over Items2').item.json.name }}"
+              },
+              {
+                "name": "file_path",
+                "value": "={{ $('Loop Over Items2').item.json.path }}"
+              },
+              {
+                "name": "project",
+                "value": "={{ $('Loop Over Items2').item.json.project }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "f5b39cd1-4c61-495e-bd7e-1bfbf5e3ca72",
+      "name": "Default Data Loader1",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        3808,
+        1856
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": "documents",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        3712,
+        1552
+      ],
+      "id": "f84bcfc4-de44-492a-83be-33ab923734c5",
+      "name": "Postgres PGVector Store2",
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chunkSize": 200,
+        "chunkOverlap": 20,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        3808,
+        2000
+      ],
+      "id": "8ef4bcdf-d5c9-477a-8f7a-10379e259546",
+      "name": "Recursive Character Text Splitter1"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DO $$\nBEGIN\n    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'documents') THEN\n        EXECUTE 'DELETE FROM documents WHERE metadata->>''file_id'' LIKE ''%' || $1 || '%''';\n    END IF;\nEND\n$$;",
+        "options": {
+          "queryReplacement": "={{ $json.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1584,
+        2240
+      ],
+      "id": "9e0ae3b2-3737-454e-99d3-024a4031572c",
+      "name": "Delete from documents",
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "amazon.titan-embed-text-v2:0"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsAwsBedrock",
+      "typeVersion": 1,
+      "position": [
+        3488,
+        1856
+      ],
+      "id": "be2674e9-ca1b-4b5d-a697-618f9832bd29",
+      "name": "Embeddings AWS Bedrock2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "133bd4d8-1ea9-4cb2-a498-12590620dd84",
+              "leftValue": "={{ $json.data || $json.markdown}}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3552,
+        1536
+      ],
+      "id": "851693da-9d98-4d00-9b1b-761cb88ffbbd",
+      "name": "data is not empty"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Loads the complete text content of a document based on its file_id.\n\nINPUT:\n- file_id: 64-digit SHA256 hash (from List Documents or RAG hits)\n\nRETURNS:\n- document_text: Merged full text of all text sections\n\nWHEN TO USE:\n- After RAG search, if hits are fragmentary\n- After List Documents, to load complete content\n- When a file is explicitly requested\n\nWORKFLOW:\n1. Determine file_id via List Documents or RAG search\n2. Call Get File Contents with file_id\n\nDO NOT USE FOR:\n- Files only on GitLab (→ GitLab Get File)\n- Tabular evaluations (→ Query Document Rows)\n- Unknown file_ids (determine first via List Documents)",
+        "operation": "executeQuery",
+        "query": "SELECT \n    string_agg(text, ' ') as document_text\nFROM documents\n  WHERE metadata->>'file_id' = $1\nGROUP BY metadata->>'file_id';",
+        "options": {
+          "queryReplacement": "={{ $fromAI('file_id') }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1280,
+        1008
+      ],
+      "id": "5a8af16e-d240-4405-bca8-d2a484c348e4",
+      "name": "Get File Contents",
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "topN": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.rerankerCohere",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        1024
+      ],
+      "id": "887e2151-fa01-43e1-a443-0c8b6fc9eba2",
+      "name": "Reranker Cohere",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "amazon.titan-embed-text-v2:0"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsAwsBedrock",
+      "typeVersion": 1,
+      "position": [
+        816,
+        1024
+      ],
+      "id": "a123d5a8-256d-4bc9-9853-5531b3cd2f72",
+      "name": "AWS Bedrock Titan Embedding G2",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6e7b90b3-631d-4cef-b119-fe4d2bccaf46",
+              "name": "output",
+              "value": "={{ $if($('AI Tool Agent').isExecuted, $('AI Tool Agent').item.json.output, $json.text) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1024,
+        64
+      ],
+      "id": "a4c0ba7e-61c9-474d-bcf3-801d6230df22",
+      "name": "Set output"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "e858eee5-4e34-40ca-a482-c98de9b8a1c7",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1216,
+        64
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        656,
+        64
+      ],
+      "id": "5ae300ca-8ae2-46e5-b1a2-6fd7ca5be6ff",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "d024dcae-9e0a-447d-80f7-ff77df1b4b90",
+              "leftValue": "={{ $json.chatInput }}",
+              "rightValue": "### Task:",
+              "operator": {
+                "type": "string",
+                "operation": "startsWith"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        448,
+        80
+      ],
+      "id": "38c905e6-3740-4032-aa5f-ced68e9f0b07",
+      "name": "If Task"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a9a245e-f1a1-4282-bb02-a81ffe629f0f",
+              "name": "chatInput",
+              "value": "={{ $json?.chatInput || $json.body.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "b80831d8-c653-4203-8706-adedfdb98f77",
+              "name": "sessionId",
+              "value": "={{ $json?.sessionId || $json.body.sessionId}}",
+              "type": "string"
+            },
+            {
+              "id": "87940613-c80f-450b-b708-345a8559eb35",
+              "name": "gitBaseURL",
+              "value": "https://git.exampl.com",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "444d974c-f00b-4294-bc09-deb1cd32610c",
+      "name": "Set Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        288,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Searches the RAG system to look up information in the knowledge base.\nAlways call with JSON {“input”:“<query>”.",
+        "tableName": "documents",
+        "topK": 20,
+        "options": {}
+      },
+      "id": "2302df43-ff38-43c8-88a9-81e26c3f9375",
+      "name": "Postgres PGVector Store",
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
+      "typeVersion": 1.3,
+      "position": [
+        1024,
+        864
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "2ae7faa7-a936-4621-a680-60c512163034",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "text/plain",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "6eb1f3a6-6071-4743-b9a9-121ab7e1c9e4",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "application/xml",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "xml"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "99101144-2cc7-415d-895f-52f9a4798faf",
+                    "leftValue": "={{ $binary.data.mimeType }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "pdf"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "id": "450ed060-bf38-49ee-bcd5-be9dec4c68af",
+      "name": "File-Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        2416,
+        1472
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        3104,
+        1216
+      ],
+      "id": "6f1697eb-6f6d-4d40-a95a-96bdce37b743",
+      "name": "Extract from Text-File"
+    },
+    {
+      "parameters": {
+        "operation": "xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        3104,
+        1376
+      ],
+      "id": "63b5944f-033c-4b87-b830-d0667f3da94b",
+      "name": "Extract from XML-File"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5.2-chat-latest",
+          "mode": "list",
+          "cachedResultName": "gpt-5.2-chat-latest"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        464,
+        624
+      ],
+      "id": "0591cc06-36fd-464b-960a-1ac3f205e150",
+      "name": "OpenAI Chat Model",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss-120b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        656,
+        640
+      ],
+      "id": "a326742a-31ea-484b-b1f7-9cbb0f63d72d",
+      "name": "Azure OpenAI Chat Model",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "3o7EUGIGbieKbLTQ",
+          "name": "Azure Open AI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "GitLab 2 RAG",
+        "formDescription": "Gebe den Dateipfad der Datei aus dem GtiLab Projekt ein, das in das RAG-System übertragen werden soll.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "URL",
+              "placeholder": "https://<git-server>/<benutzername>/<project>",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Branch",
+              "placeholder": "main",
+              "defaultValue": "main",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Dateipfad",
+              "placeholder": "README.md"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.3,
+      "position": [
+        48,
+        1472
+      ],
+      "id": "dc9729d7-4df6-42aa-a68d-b6c8279f33d4",
+      "name": "Submit File-Form",
+      "webhookId": "14c2d368-7874-45f2-a0c7-f3afd48f711b"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": "marco",
+        "repository": "={{ $json.project }}",
+        "filePath": "={{ $('Loop Over Items2').item.json.path }}",
+        "additionalParameters": {
+          "reference": "={{ $('Loop Over Items2').item.json.branch }}"
+        }
+      },
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        1504
+      ],
+      "id": "82221ea4-7a39-4967-94ae-32a2973ee6e0",
+      "name": "Get a Projectfile",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1685712e-8f1f-404f-8d1b-fc96c5f53049",
+              "leftValue": "={{ $('Normalize Input').item.json.file }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        544,
+        1472
+      ],
+      "id": "6940ee6c-2d57-4ae9-bf16-270a18203d6c",
+      "name": "Has File?"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "get",
+        "owner": "={{ $('Normalize Input').item.json.owner }}",
+        "repository": "={{ $('Normalize Input').item.json.project }}",
+        "filePath": "={{ $('Normalize Input').item.json.file }}",
+        "asBinaryProperty": false,
+        "additionalParameters": {
+          "reference": "={{ $('Normalize Input').item.json.branch }}"
+        }
+      },
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1,
+      "position": [
+        768,
+        1344
+      ],
+      "id": "c3a37135-8e80-4bea-8224-3bc7c3333e20",
+      "name": "Get a file",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE TABLE document_metadata (\n    id TEXT PRIMARY KEY,\n    title TEXT,\n    url TEXT,\n    project TEXT,\n    owner TEXT,\n    branch TEXT,\n    last_modified TIMESTAMPTZ,\n    created_at TIMESTAMP DEFAULT NOW(),\n    schema TEXT\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        32,
+        1008
+      ],
+      "id": "6c9356ca-ff34-4919-8959-4c3c5c73bb81",
+      "name": "Create Document Metadata Table",
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Set Input').item.json.sessionId }}"
+      },
+      "id": "1223c603-e64e-4e19-b534-4bb9cf42c895",
+      "name": "Postgres Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1,
+      "position": [
+        800,
+        640
+      ],
+      "notesInFlow": false,
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Get a repository').item.json._links.self }}/repository/commits?path={{ encodeURIComponent($json.file_path || $json.path) }}&per_page=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "ref",
+              "value": "={{ $('Normalize Input').item.json.branch }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        992,
+        1488
+      ],
+      "id": "b55e9cef-c981-4fd5-a394-594f3ce53a0a",
+      "name": "Get lastModified",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "56fd64dd-1faf-426f-b714-cb0762e5a472",
+              "name": "id",
+              "value": "={{ ($('Normalize Input').item.json.project + '/' + $if($('Gitlab Files').isExecuted, $('Gitlab Files').item.json.path, $('Get a file').item.json.file_path)).hash('sha256') }}",
+              "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-0001-0000-0000-000000000001",
+              "name": "commit_id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-0002-0000-0000-000000000002",
+              "name": "blob_id",
+              "value": "={{ $if($('Gitlab Files').isExecuted, $('Gitlab Files').item.json.id, $('Get a file').item.json.blob_id) }}",
+              "type": "string"
+            },
+            {
+              "id": "471962f9-298e-40fa-9705-b5e9b7d525f2",
+              "name": "name",
+              "value": "={{ $if($('Gitlab Files').isExecuted, $('Gitlab Files').item.json.name, $('Get a file').item.json.file_name) }}",
+              "type": "string"
+            },
+            {
+              "id": "52268ae7-aecc-4fc9-9c7c-2c06ec89842c",
+              "name": "type",
+              "value": "={{ $if($('Gitlab Files').isExecuted, $('Gitlab Files').item.json.type, 'blob') }}",
+              "type": "string"
+            },
+            {
+              "id": "e2141640-9204-4e32-a3dd-3c73f83e23ea",
+              "name": "path",
+              "value": "={{ $if($('Gitlab Files').isExecuted, $('Gitlab Files').item.json.path, $('Get a file').item.json.file_path) }}",
+              "type": "string"
+            },
+            {
+              "id": "e087b1f7-2a7d-45b3-9f99-a9248bdbbb6b",
+              "name": "project",
+              "value": "={{ $('Normalize Input').item.json.project }}",
+              "type": "string"
+            },
+            {
+              "id": "cba1e5f6-4e5c-4abf-8b2c-6b22ba134fef",
+              "name": "project_id",
+              "value": "={{ $('Get a repository').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "052f7455-05b6-43c1-822e-cdf8b320b71f",
+              "name": "repo_self",
+              "value": "={{ $('Get a repository').item.json._links.self }}",
+              "type": "string"
+            },
+            {
+              "id": "51c94a71-be16-4853-b1d5-d577115226d5",
+              "name": "lastModified",
+              "value": "={{ $json.committed_date }}",
+              "type": "string"
+            },
+            {
+              "id": "54a3da30-dfdb-4e79-9da2-556f76048689",
+              "name": "owner",
+              "value": "={{ $('Normalize Input').item.json.owner }}",
+              "type": "string"
+            },
+            {
+              "id": "87afc7d5-bbb4-4819-83c7-0e296da14d3e",
+              "name": "branch",
+              "value": "={{ $('Normalize Input').item.json.branch }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        1488
+      ],
+      "id": "9a020b88-539d-4f0a-b404-817d4d7a3de9",
+      "name": "Normailze Data"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Select rows from a table in Postgres Lists all documents in the RAG system. Use to determine file_id or check file existence.\n\nRETURN:\n- id: 64-digit SHA256 hash (= file_id)\n- title: File name\n- url: File path in the repository\n- project: Project name (ai-lab, etc.)\n- last_modified: Modification date\n- schema: Table schema (CSV/Excel only)\n\nWORKFLOW:\n1. List Documents → find file_id\n2. Get File Contents → load full text\n   OR Query Document Rows → SQL on table data\n\nFOR FILES WITH THE SAME NAME: Use project and url to differentiate.\n\nNOT for GitLab-only files (→ GitLab List Folders) or content search (→ RAG search).",
+        "operation": "select",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "document_metadata",
+          "mode": "list",
+          "cachedResultName": "document_metadata"
+        },
+        "returnAll": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        1328,
+        864
+      ],
+      "id": "00e68069-a2dd-4d6f-92db-e6c7b3ae23e2",
+      "name": "List Documents",
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "qwen.qwen3-32b-v1:0",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAwsBedrock",
+      "typeVersion": 1.1,
+      "position": [
+        800,
+        224
+      ],
+      "id": "edd6e72c-89e3-4072-944c-1736db61266e",
+      "name": "LLM Tasker Qwen3 32b (dense)",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## 🦊 Tools für den AI Agenten",
+        "height": 376,
+        "width": 1812,
+        "color": 5
+      },
+      "id": "21b723d9-7589-4d36-b790-811e60423fa5",
+      "name": "Sticky Note - GitLab",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        608,
+        800
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## AI Output (Open-WebUI)",
+        "height": 225,
+        "width": 396
+      },
+      "id": "1de18645-1a05-4816-b4e8-bc675dc8de2a",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1008,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Tasks (Open-WebUI)",
+        "height": 368,
+        "width": 368,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        608,
+        0
+      ],
+      "typeVersion": 1,
+      "id": "9d655ad0-1e23-4899-b479-04229d035103",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## 🎯AI Tool Agent",
+        "height": 400,
+        "width": 368,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        608,
+        384
+      ],
+      "typeVersion": 1,
+      "id": "80cd9f43-64d4-4f65-b8b0-e87c826b1ff4",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Creates a new branch in a GitLab repository.\n\nUSE FOR:\n- Feature branches: feature/<description>\n- Bugfix branches: fix/<description>\n- Documentation: docs/<description>\n\nPARAMETERS:\n- project_id: Numeric project ID (required)\n- branch: Name of the new branch (required)\n- source_branch: Source branch (required), usually “main”\n\nBRANCH PARAMETER (STRICT)\n- `branch`, `source_branch` MUST be plain text\n- NEVER URL-encode slash '/' in branch names.\n\nPARAMETER-TYPEN (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nWORKFLOW:\n1. GitLab List Branches → check if branch exists\n2. GitLab Create Branch → create new branch\n3. WAIT for confirmation of success with branch details\n\nNEVER call without first checking with List Branches.",
+        "method": "POST",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ $fromAI('project_id', 'Die Projekt-ID (numerisch)', 'number') }}/repository/branches",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={ \"branch\": \"{{ $fromAI('branch', 'Plain Text, Name des neuen Branches', 'string') }}\", \"ref\": \"{{ $fromAI('source_branch', 'Plain Text, Quell-Branch von dem abgezweigt wird (z.B. main, master, develop)', 'string') }}\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1472,
+        864
+      ],
+      "id": "1a31c1f1-7b42-4369-a191-8fda51e92291",
+      "name": "GitLab Create Branch",
+      "description": "Erstellt einen neuen Branch in einem GitLab-Repository. Benötigt: project_id, branch_name (neuer Branch), source_branch (Quell-Branch wie main/master).",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Lists all branches of a GitLab repository.\n\nUSE FOR:\n- Overview of existing branches before making changes\n- Checking whether a branch already exists\n- Finding feature/fix branches\n\nPARAMETERS:\n- project_id: Numeric project ID (required), e.g., 1 for ai-lab\n- search_term: Optional, filters branches by name\n\nPARAMETER-TYPEN (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nRETURN: List with branch names, last commit, protected status.\n\nALWAYS CALL FIRST before creating a new branch.",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ $fromAI('project_id', 'Die Projekt-ID (numerisch) oder URL-encoded Pfad', 'number') }}/repository/branches",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={ \"search\": \"{{ $fromAI('search_term', 'Optional: Suchbegriff zum Filtern der Branches (leer lassen für alle)', 'string') }}\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1440,
+        1008
+      ],
+      "id": "ab95706f-d185-4bee-a529-0c95864c1193",
+      "name": "GitLab List Branches",
+      "description": "Listet alle Branches eines GitLab-Repositories auf. Optional mit Suchfilter.",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Reads the contents of a file from the GitLab repository.\n\nUSE FOR:\n- Loading the current file status before changes\n- Retrieving file contents for analysis\n- Checking whether a file exists\n\nPARAMETERS:\n- project_id: Numeric project ID (required)\n- file_path_encoded: URL-encoded path (required), e.g., src%2Findex.js\n- branch: Branch name (required)\n\nBRANCH PARAMETER (STRICT)\n- The `branch` parameter MUST be plain text, e.g. feature/srp-user-management\n- The `file_path_encoded` MUST be url encode, e.g. / becomes %2F, spaces become %20\n- NEVER URL-encode branch names (do not use feature%2Fsrp-user-management)\nURL ENCODING applies ONLY to `file_path_encoded`.\n\nPARAMETER-TYPEN (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nRETURN: File content (Base64-encoded), file name, size, last commit.\n\nDIFFERENCE FROM RAG:\n- GitLab Get File: Current status directly from the server\n- Get File Contents: Indexed version from RAG database",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ $fromAI('project_id', 'Die Projekt-ID (numerisch)', 'number') }}/repository/files/{{ $fromAI('file_path_encoded', 'URL-encoded Dateipfad (z.B. src%2Findex.js für src/index.js)', 'string') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={ \"ref\": \"{{ $fromAI('branch', 'Plain Text, Branch-Name von dem die Datei gelesen werden soll', 'string') }}\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1744,
+        1008
+      ],
+      "id": "69b1683a-a6eb-448a-bce5-f0a20fab4764",
+      "name": "GitLab Get File",
+      "description": "Liest eine Datei aus dem Repository. Der Inhalt ist Base64-encoded. Dateipfad muss URL-encoded sein (/ wird zu %2F).",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Creates a new issue in the GitLab project.\n\nUSE FOR:\n- Documenting bugs\n- Creating feature requests\n- Tracking tasks\n\nPARAMETERS:\n- project_id: Numeric project ID (required)\n- issue_title: Clear, descriptive title (required)\n- issue_description: Detailed description, Markdown (optional)\n- labels: Comma-separated, e.g., “bug,urgent” (optional)\n\nPARAMETER-TYPS (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nDESCRIPTION SHOULD INCLUDE:\n- Context/background\n- Expected vs. actual behavior (for bugs)\n- Steps to reproduce (for bugs)\n- Acceptance criteria (for features)\n\nRETURN: Issue ID, URL, created issue object.",
+        "method": "POST",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ $fromAI('project_id', 'Die Projekt-ID (numerisch)', 'number') }}/issues",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={ \"Content-Type\": \"application/json\" }",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"title\": \"{{ $fromAI('issue_title', 'Titel des Issues', 'string') }}\", \"description\": \"{{ $fromAI('issue_description', 'Ausführliche Beschreibung des Issues (Markdown unterstützt)', 'string') }}\", \"labels\": \"{{ $fromAI('labels', 'Optional: Komma-separierte Labels (z.B. bug,urgent)', 'string') }}\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        2064,
+        1008
+      ],
+      "id": "8a0d51b0-9257-4ad3-9a78-729c4aeefa5d",
+      "name": "GitLab Create Issue",
+      "description": "Erstellt ein neues Issue im GitLab-Projekt. Unterstützt Titel, Beschreibung (Markdown) und Labels.",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Lists issues in a GitLab project.\n\nUSE FOR:\n- Overview of open tasks/bugs\n- Search for specific issues\n- Check project status\n\nPARAMETERS:\n- project_id: Numeric project ID (required)\n- state: “opened,” “closed,” or “all” (Optional)\n- search_term: Search term for title/description (Optional)\n\nPARAMETER-TYPS (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nRETURN: List with issue ID, title, status, labels, author, date.\n\nDefault: Returns up to 20 issues.",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ $fromAI('project_id', 'Die Projekt-ID (numerisch)', 'number') }}/issues",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={ \"state\": \"{{ $fromAI('state', 'Filter: opened, closed oder all', 'string') }}\", \"search\": \"{{ $fromAI('search_term', 'Optional: Suchbegriff', 'string') }}\", \"per_page\": \"20\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1936,
+        864
+      ],
+      "id": "0c1ced65-7f65-4915-af8b-62c254238384",
+      "name": "GitLab List Issues",
+      "description": "Listet Issues eines Projekts auf. Filterbar nach Status (opened/closed/all) und Suchbegriff.",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Creates a merge request from one branch to another.\n\nUSE FOR:\n- Submitting completed changes for review\n- Integrating feature branch into main\n\nPARAMETERS:\n- project_id: Numeric project ID (required)\n- source_branch: Branch with changes (required)\n- target_branch: Target branch, usually “main” (required)\n- mr_title: Meaningful title (required)\n- mr_description: Description of changes, Markdown (optional)\n\nBRANCH PARAMETER (STRICT)\n-  `source_branch`, `target_branch` MUST be plain text\n- NEVER URL-encode slash '/' in branch names.\n\nPARAMETER-TYPS (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nWORKFLOW:\n1. Commit all changes to feature branch\n2. GitLab Create Merge Request\n3. Share MR URL with user\n\nDESCRIPTION SHOULD INCLUDE:\n- Summary of changes\n- Reference to issues (if applicable)\n- Test notes\n\nRETURN: MR ID, MR URL, status.",
+        "method": "POST",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ $fromAI('project_id', 'Die Projekt-ID (numerisch)', 'number') }}/merge_requests",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={ \"Content-Type\": \"application/json\" }",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={ \"source_branch\": \"{{ $fromAI('source_branch', 'Plain Text, Quell-Branch (der Branch mit den Änderungen)', 'string') }}\", \"target_branch\": \"{{ $fromAI('target_branch', 'Plain Text, Ziel-Branch (z.B. main, master)', 'string') }}\", \"title\": \"{{ $fromAI('mr_title', 'Titel des Merge Requests', 'string') }}\", \"description\": \"{{ $fromAI('mr_description', 'Optional: Beschreibung des MR (Markdown)', 'string') }}\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        2112,
+        864
+      ],
+      "id": "a6338b3c-1fa3-4a7c-8c36-d6aca6b26132",
+      "name": "GitLab Create Merge Request",
+      "description": "Erstellt einen Merge Request von einem Branch in einen anderen. Ideal nach Abschluss von Änderungen auf einem Feature-Branch.",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Lists files and folders in a repository directory.\n\nUSE FOR:\n- Exploring project structure\n- Checking whether a file/folder exists\n- Listing available files in a directory\n\nPARAMETERS:\n- project_id: Numeric project ID (required)\n- branch: Branch name (required)\n- directory_path: Subdirectory (empty = root)\n- recursive: “true” for all subfolders, “false” for current level\n\nBRANCH PARAMETER (STRICT)\n- The `branch` parameter MUST be plain text (e.g. feature/srp-user-management)\n- NEVER URL-encode branch names.\n\nPARAMETER-TYPEN (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nRETURN: List with name, path, type (blob/tree).\n\nFor file content, use GitLab Get File afterwards.",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ $fromAI('project_id', 'Die Projekt-ID (numerisch)', 'number') }}/repository/tree",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={ \"ref\": \"{{ $fromAI('branch', 'Plain Text, Branch-Name', 'string') }}\", \"path\": \"{{ $fromAI('directory_path', 'Optional: Unterverzeichnis-Pfad (leer für Root)', 'string') }}\", \"recursive\": \"{{ $fromAI('recursive', 'true für rekursive Auflistung, false für nur aktuelle Ebene', 'string') }}\", \"per_page\": \"100\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1600,
+        1008
+      ],
+      "id": "b15e09c7-aed6-4d72-8275-17e116d2d79b",
+      "name": "GitLab List Folders",
+      "description": "Listet Dateien und Ordner in einem Repository-Verzeichnis auf. Kann rekursiv alle Dateien anzeigen.",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Displays the commit history of a branch.\n\nUSE FOR:\n- Tracking recent changes\n- Finding commit SHAs for reference\n- Checking who made changes and when\n\nPARAMETERS:\n- project_id: Numeric project ID (required)\n- branch: Branch name (required)\n- limit: Number of commits (default: 20)\n\nBRANCH-PARAMETER (STRICT)\n- `branch` MUST be plain text (e.g. feature/srp-user-management), never URL-encoded.\n\nPARAMETER-TYPEN (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nRETURN: List with commit SHA, author, date, message.\n\nUseful for verifying whether your own commits were successful.",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ $fromAI('project_id', 'Die Projekt-ID (numerisch)', 'number') }}/repository/commits",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "specifyQuery": "json",
+        "jsonQuery": "={ \"ref_name\": \"{{ $fromAI('branch', 'Plain Text, Branch-Name', 'string') }}\", \"per_page\": \"{{ $fromAI('limit', 'Anzahl der Commits (Standard: 20)', 'string') }}\" }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1616,
+        864
+      ],
+      "id": "1e96517e-41d5-4930-a6f1-3d6952c45c4c",
+      "name": "GitLab List Commits",
+      "description": "Zeigt die Commit-Historie eines Branches an. Nützlich um den aktuellen Stand zu verstehen.",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Lists all visible GitLab projects with IDs.\n\nUSE FOR:\n- Determining project ID (important for all other GitLab tools)\n- Overviewing available projects\n- Retrieving project details\n\nPARAMETERS:\n- membership: “true” for own, “false” for all visible (optional)\n\nRETURN: List with project_id, name, path, description, default_branch.\n\nIMPORTANT: The project_id is required for ALL other GitLab tools",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "membership",
+              "value": "={{ $fromAI('membership', 'true für nur eigene Projekte, false für alle sichtbaren', 'string') }}"
+            },
+            {
+              "name": "simple",
+              "value": "true"
+            },
+            {
+              "name": "per_page",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        2288,
+        864
+      ],
+      "id": "577aca09-1beb-4548-862a-39d7d99520c6",
+      "name": "GitLab List Projects",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Lists users of the GitLab server.\n\nUSE FOR:\n- Finding available users for assignments\n- Determining user IDs\n- Team overview\n\nPARAMETERS:\n- No mandatory parameters\n- Returns active users by default\n\nRETURN: List with user ID, username, name, status.\n\nNOTE: Full list may require admin rights.",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/users",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "active",
+              "value": "true"
+            },
+            {
+              "name": "per_page",
+              "value": "100"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        2224,
+        1008
+      ],
+      "id": "d82beb28-ced2-4b83-ac88-8f3394bef7d7",
+      "name": "GitLab List Users",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput + \"\\n\\n<context>\\n\" + ($json.rag_context || \"\") + \"\\n</context>\" }}",
+        "options": {
+          "systemMessage": "You are a SINGLE AI AGENT for professional software development.\n\nYou combine:\n- Planning\n- Research (RAG + Web)\n- Code creation\n- GitLab interaction (read/write/commit)\n\nThere are NO other agents.\nThere is NO chat archive.\nThere is NO archive search.\n\nABSOLUTE RULES (NON-NEGOTIABLE)\n========================\n1) SOURCE OF TRUTH (HART)\n- Chat context is NEVER the current project status.\n- The order is strict:\n  1. GitLab (current status)\n  2. RAG (snapshot/knowledge base)\n  3. WebSearch (references)\n  4. Own knowledge (conceptual only)\n\n- If project / branch / file / path is mentioned:\n  → GitLab tool MUST be used.\n- If snapshot/documentation is sought:\n  → Use RAG tools.\n- If standards / RFC / official documentation are missing:\n  → Use WebSearch.\n\nGuessing is PROHIBITED.\n\n1.1) RAG – IMAGE RENDERING (MANDATORY)\n- If the RAG system returns image links (e.g. \"https://s3.ai-lab.raspilab.de/n8n/image_1757270371195_m5323a.png\"):\n  → ALWAYS render them in the chat as Markdown images, never as plain text URLs.\n- Format is mandatory:\n  ![RAG Image](<FULL_IMAGE_URL>)\n- The images MUST appear in the correct position relative to the surrounding text.\n  → Preserve the original order exactly:\n    Text + Image → Text + Image → ...\n- NEVER move all images to the beginning or end of the message.\n- URL integrity is mandatory:\n  → Do NOT remove or shorten any query parameters or URL parts.\n  → Always output the full URL exactly as provided (including any URL parameters).\n\n2) CODE CREATION (CODEGEN RULES – MANDATORY)\nYou MAY write code yourself.\nYou MUST comply with ALL of the following rules:\n\n2.1) Sources & Style\n- No copy-paste from external sources.\n- External content is for REFERENCE only.\n- Existing project style must be strictly adhered to.\n- Images and documents from the RAG system or GitLab server are not external sources.\n\n2.2) Source priority (descending)\n1. Standards / specifications (RFC, W3C, ECMA, NIST)\n2. Official documentation (Qt, OpenSSL, language specs)\n3. Technical literature / papers\n4. Established community documents\n5. Forums (only supplementary)\n\n2.3) Mandatory header for EVERY new file\n/**\n * @file <filename>\n * @brief <short description>\n * @references\n *   - <source 1>\n *   - <source 2>\n */\n\n- Maximum of 3–4 references\n- No URLs\n- Short, precise descriptions\n\n2.4) Security\n- NO real passwords, keys, tokens\n- ALWAYS use placeholders: <EXAMPLE_PASSWORD>, <API_KEY>\n- Focus on structure, not sample data\n\n2.5) Unclear sources\n- Explain conceptually first\n- Explicitly mark uncertainties\n- Openly name missing sources\n\n3) DISPLAYING/READING FILES FROM GITLAB\n- For “display file,” “full content,” “entire code”:\n  → GitLab Get File is MANDATORY\n- Summaries are PROHIBITED\n- If content cannot be delivered:\n  → State error + reason4) GITLAB – WRITING / COMMITS (EXTREMELY STRICT)\n\nA) Confirmation requirement\n- Every write operation (create/update file, branch, MR, issue) only after explicit user confirmation:\n  “Yes,” “Confirmed,” “Execute.”\n\nB) Never main/master\n- Write operations on main/master are prohibited.\n\nC) Mandatory procedure for file updates (Update File)\n1. GitLab Get File (load current content) – MANDATORY\n2. Prepare changes locally/conceptually\n3. Show users the planned changes (diff or marked areas) – MANDATORY\n4. Wait for user confirmation – MANDATORY\n5. Execute GitLab Update File – MANDATORY\n6. Validate success – MANDATORY:\n   - If tool response contains a commit SHA: output.\n   - If tool response does NOT contain a commit SHA: DO NOT consider this an error.\n     Then: Call GitLab List Commits (branch, limit=1) and output the latest SHA.\n\nD) Mandatory procedure for new files (Create File)\n1. Check whether file exists (optionally via GitLab Get File / List Folders)\n2. Prepare content\n3. Show user content/changes – MANDATORY\n4. Wait for user confirmation – MANDATORY\n5. Execute GitLab Create File – MANDATORY\n6. Validate success as above (SHA only via List Commits, if not in response)\n\nE) One write operation per step\n- Exactly one write operation per tool call.\n- Additional READ calls (Get File / List Commits) are allowed and often mandatory.\n  (“one write op” means: not multiple writes in one step, not: no reads)\n\nF) Error handling\n- Display errors unchanged.\n- No sugarcoating, no fabricated successes.\n\n5) TOOL HONESTY\n- You must NEVER claim to have used a tool\n  if no tool call was made.\n- “Loaded from GitLab” is only allowed with Tool Result.\n- If something cannot be verified: say so.\n\n6) WEB SEARCH (REFERENCES ONLY)\n- WebSearch serves EXCLUSIVELY as a reference source\n- No internal project knowledge\n- No code fragments from the project\n- No internal names, paths, classes\n\n7) WORKING METHOD (ALWAYS)\nA) Analyze the task\n- What? Where? Why? Goal?\n- Need to read? → GitLab\n- Need knowledge? → RAG / Web\n\nB) Action\n- Read → Tool\n- Write → Suggestion → Confirmation → Tool\n\nC) Final check (MANDATORY)\n- [ ] Which tools were used?\n- [ ] Which source was the source of truth?\n- [ ] Was it written? Commit SHA?\n- [ ] Open confirmations?\n\n8) GITLAB PROJECT ID RULE (HART)\n- For any GitLab tool: project_id must be a numeric integer.\n- Never pass project name/path as project_id.\n- If only a project name is known: ALWAYS call \"GitLab List Projects\" first and copy the numeric ID.\n\nMEMORY AID\n========================\nIf you don't have it from a tool, then you don't know it.\nThen: Use the tool or openly say that it is unknown.\n\nAlways respond in German.",
+          "returnIntermediateSteps": false
+        }
+      },
+      "id": "8abaae92-410f-4c22-a795-ae94479077d0",
+      "name": "AI Tool Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        688,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Alternative AI-Modelle",
+        "height": 240,
+        "width": 624,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -32,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "fc7abf52-72da-425c-bf47-71201375b2a1",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Updates an existing file in the repository with a commit.\n\nPARAMETERS:\n- project_id: Numeric project ID (required)\n- file_path_encoded: URL-encoded path (required)\n- branch: Target branch (required) - NEVER main/master!\n- content: New file content as plain text (required)\n- commit_message: Format “[AI agent] <type>: <description>” (required)\n\nBRANCH PARAMETER (STRICT)\n- `branch` MUST be plain text\n- NEVER URL-encode slash '/' in branch names.\n\nPARAMETER-TYPS (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nWORKFLOW (STRICT):\n1. GitLab Get File → load current status\n2. Prepare changes and SHOW user\n3. WAIT for explicit confirmation\n4. ONLY THEN call up the tool\n5. Check success: Commit SHA in response?\n\nNEVER:\n- Without first loading the file\n- Without user confirmation\n- On main/master branch\n\nNOTE: This endpoint may not return a commit SHA. If SHA is required, call GitLab List Commits (limit=1) after success.\n\nIf you get the error “reference does not point to expected object”:\n→ Reload the file and try again.",
+        "method": "PUT",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ Math.trunc($fromAI('project_id', 'Die Projekt-ID (numerisch). PFLICHT: Ganzzahl, z.B. 6', 'number')) }}/repository/files/{{ $fromAI('file_path_encoded', 'URL-encoded Dateipfad (z.B. src%2Findex.js)', 'string') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={ \"Content-Type\": \"application/json\" }",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { branch: $fromAI('branch', 'Plain Text. Ziel-Branch, z.B. feature/srp-user-management (NICHT URL-encoded)', 'string'), content: $fromAI('content', 'Neuer Inhalt der Datei (Plain Text)', 'string'), commit_message: $fromAI('commit_message', 'PFLICHT. Format: [AI agent] <type>: <beschreibung>. Beispiel: [AI agent] fix: handle null pointer', 'string') } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1776,
+        864
+      ],
+      "id": "37e3ef4a-3895-404e-a9ca-9ef12a0dd9c3",
+      "name": "GitLab Update File",
+      "description": "Aktualisiert eine existierende Datei im Repository (Einchecken). Erstellt einen Commit mit der Änderung.",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Creates a new file in the repository with a commit.\n\nPARAMETERS:\n- project_id: Numeric project ID (required)\n- file_path_encoded: URL-encoded path (required)\n- branch: Target branch (required) - NEVER main/master!\n- content: File content as plain text (required)\n- commit_message: Format “[AI agent] <type>: <description>” (required)\n\nBRANCH PARAMETER (STRICT)\n- `branch` MUST be plain text\n- NEVER URL-encode slash '/' in branch names.\n\nPARAMETER-TYPS (STRICT)\n- project_id MUST be an INTEGER (numeric GitLab project ID), e.g. 6\n- Project names/paths (e.g. \"ai-lab\") are INVALID and must NOT be used as project_id\n- If project_id is unknown: FIRST call \"GitLab List Projects\" to resolve the numeric ID\n\nWORKFLOW (STRICT):\n1. Ask user for confirmation\n2. WAIT for explicit “Yes” / “Confirmed”\n3. ONLY THEN call up the tool\n4. Check success: Commit SHA in response?\n\nNEVER:\n- Call up without user confirmation\n- Create on main/master branch\n- Claim file was created without calling up the tool\n\nNOTE: This endpoint may not return a commit SHA. If SHA is required, call GitLab List Commits (limit=1) after success.\n\nIf successful: Inform the user of the commit SHA.\nIf there is an error: Show the error message to the user.",
+        "method": "POST",
+        "url": "={{ $('Set Input').item.json.gitBaseURL }}/api/v4/projects/{{ Math.trunc($fromAI('project_id', 'Die Projekt-ID (numerisch). PFLICHT: Ganzzahl, z.B. 6', 'number')) }}/repository/files/{{ $fromAI('file_path_encoded', 'URL-encoded Dateipfad (z.B. src%2Findex.js)', 'string') }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "gitlabApi",
+        "sendHeaders": true,
+        "specifyHeaders": "json",
+        "jsonHeaders": "={ \"Content-Type\": \"application/json\" }",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { branch: $fromAI('branch', 'Plain Text. Ziel-Branch, z.B. feature/srp-user-management (NICHT URL-encoded)', 'string'), content: $fromAI('content', 'Inhalt der neuen Datei (Plain Text)', 'string'), commit_message: $fromAI('commit_message', 'PFLICHT. Format: [AI agent] <type>: <beschreibung>. Beispiel: [AI agent] feat: add admin endpoints', 'string') } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.3,
+      "position": [
+        1888,
+        1008
+      ],
+      "id": "88fb1bd2-55b6-4383-a103-9097ca545f49",
+      "name": "Gitlab Create File",
+      "description": "Erstellt eine neue Datei im Repository mit einem Commit. Dateipfad muss URL-encoded sein.",
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelSource": "inferenceProfile",
+        "model": "eu.anthropic.claude-opus-4-5-20251101-v1:0",
+        "options": {
+          "maxTokensToSample": 60000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAwsBedrock",
+      "typeVersion": 1.1,
+      "position": [
+        176,
+        624
+      ],
+      "id": "eab66878-ca3b-414c-a6f3-fc0acc152a46",
+      "name": "AWS Bedrock EU Anthropic Claude Opus 4.5",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-opus-4-5-20251101",
+          "mode": "list",
+          "cachedResultName": "Claude Opus 4.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        624
+      ],
+      "id": "e628707e-1bbc-4388-a4a5-e1db9cca8f7a",
+      "name": "Anthropic Chat Model",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "content": "## Add Files to RAG",
+        "height": 944,
+        "width": 4080,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        1200
+      ],
+      "typeVersion": 1,
+      "id": "adb382a9-bb68-418b-897b-909f2f2318ba",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "77bcb33e-a9e8-4c75-be38-e818ae640a43",
+              "name": "owner",
+              "value": "={{ $json.URL.match(/https?:\\/\\/[^/]+\\/([^/]+)\\//)[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "599c5e77-4fe4-45ea-bf48-8cc5e70d8042",
+              "name": "project",
+              "value": "={{ $json.URL.match(/https?:\\/\\/[^/]+\\/[^/]+\\/([^/]+)/)[1] }}",
+              "type": "string"
+            },
+            {
+              "id": "5f16e050-29c6-4322-ad95-fbc9099a9884",
+              "name": "file",
+              "value": "={{ $json.Dateipfad }}",
+              "type": "string"
+            },
+            {
+              "id": "3f5de861-c9d3-4884-a7d9-7d15f63a6c5f",
+              "name": "branch",
+              "value": "={{ $json.Branch }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        1472
+      ],
+      "id": "c67d6808-d19a-4b95-9f3a-6fce3d577cc6",
+      "name": "Normalize Input"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "project,owner,branch",
+        "options": {
+          "removeOtherFields": true
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        432,
+        2320
+      ],
+      "id": "68d6eb30-90dd-4da0-92b8-6688fd5a3e14",
+      "name": "Get Project/Owner/Branch"
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "list",
+        "owner": "={{ $json.owner }}",
+        "repository": "={{ $json.project }}",
+        "returnAll": true,
+        "additionalParameters": {
+          "ref": "={{ $json.branch }}",
+          "recursive": true
+        }
+      },
+      "type": "n8n-nodes-base.gitlab",
+      "typeVersion": 1,
+      "position": [
+        624,
+        2320
+      ],
+      "id": "84a89b61-4537-4339-bd45-7af31a70503b",
+      "name": "Get Filelist from Server",
+      "executeOnce": false,
+      "credentials": {
+        "gitlabApi": {
+          "id": "6QAotc5DpEvII8wa",
+          "name": "GitLab account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "36e4d206-cb27-431c-9746-bd6235dc6b28",
+              "name": "owner",
+              "value": "={{ $('Get Project/Owner/Branch').item.json.owner }}",
+              "type": "string"
+            },
+            {
+              "id": "bfd037be-1156-4602-afc4-3ccde2a42743",
+              "name": "project",
+              "value": "={{ $('Get Project/Owner/Branch').item.json.project }}",
+              "type": "string"
+            },
+            {
+              "id": "a06f2475-44c1-4d9e-949d-a7e154a358fb",
+              "name": "branch",
+              "value": "={{ $('Get Project/Owner/Branch').item.json.branch }}",
+              "type": "string"
+            },
+            {
+              "id": "0ed7c410-1b4f-4712-9ba9-ba5d8072ae86",
+              "name": "path",
+              "value": "={{ $json.path }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        928,
+        2320
+      ],
+      "id": "9b119019-b71e-4dc3-b293-2e58ba5a26aa",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "b7c0ce51-ee21-4e68-86e2-72e78e1c0f30",
+              "leftValue": "={{ $json.type }}",
+              "rightValue": "blob",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        784,
+        2320
+      ],
+      "id": "a6213454-308e-417f-a182-039dc681af0c",
+      "name": "Files Only"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "advanced": true,
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "url",
+              "field2": "path"
+            },
+            {
+              "field1": "owner",
+              "field2": "owner"
+            },
+            {
+              "field1": "project",
+              "field2": "project"
+            },
+            {
+              "field1": "branch",
+              "field2": "branch"
+            }
+          ]
+        },
+        "joinMode": "keepNonMatches",
+        "outputDataFrom": "input1",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1104,
+        2224
+      ],
+      "id": "645fe031-8bf5-40e3-ac25-e6cf6d3b4017",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1328,
+        2224
+      ],
+      "id": "9bfd2bcf-406d-44ba-8172-382f6a4dc82e",
+      "name": "Old Files"
+    },
+    {
+      "parameters": {
+        "content": "## Alte Dateien aus der Datenbank entfernen",
+        "height": 320,
+        "width": 1936,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        0,
+        2160
+      ],
+      "typeVersion": 1,
+      "id": "aeabacfa-7c92-4e72-8bdd-faa7e03ef233",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "document_metadata",
+          "mode": "list",
+          "cachedResultName": "document_metadata"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Loop Over Items2').item.json.id }}",
+            "title": "={{ $('Loop Over Items2').item.json.name }}",
+            "url": "={{ $('Loop Over Items2').item.json.path }}",
+            "last_modified": "={{ $('Loop Over Items2').item.json.lastModified }}",
+            "project": "={{ $('Loop Over Items2').item.json.project }}",
+            "owner": "={{ $('Loop Over Items2').item.json.owner }}",
+            "branch": "={{ $('Loop Over Items2').item.json.branch }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "last_modified",
+              "displayName": "last_modified",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "schema",
+              "displayName": "schema",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "project",
+              "displayName": "project",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "owner",
+              "displayName": "owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "branch",
+              "displayName": "branch",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2080,
+        1504
+      ],
+      "id": "9c2ef0b5-5a14-4264-8e8d-09657ad0d51b",
+      "name": "Insert Document Metadata",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DO $$\nBEGIN\n    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'documents') THEN\n        EXECUTE 'DELETE FROM documents WHERE metadata->>''file_id'' LIKE ''%' || $1 || '%''';\n    END IF;\nEND\n$$;",
+        "options": {
+          "queryReplacement": "={{ $('Loop Over Items2').item.json.id }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1904,
+        1504
+      ],
+      "id": "78ca2b55-ec30-409d-9ba3-f6d3b7c42015",
+      "name": "Delete Old Documents",
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * FROM document_metadata;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1312,
+        1488
+      ],
+      "id": "5f78a151-0d54-42c2-ad64-842eb7cc2bc8",
+      "name": "List Postgres Documents",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "hl": "de"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
+      "typeVersion": 1,
+      "position": [
+        880,
+        864
+      ],
+      "id": "d0cb4735-ffd2-4a99-a1b9-17196d6fc151",
+      "name": "WebSearch (SearchApi)",
+      "credentials": {
+        "serpApi": {
+          "id": "5AJqlk7GfZNfrw0r",
+          "name": "SerpAPI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "LFr4Vh2SeGUGZifnSEQVy",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/LFr4Vh2SeGUGZifnSEQVy",
+          "cachedResultName": "OCR-Workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        2672,
+        1584
+      ],
+      "name": "Call OCR-Workflow",
+      "id": "472d6059-886a-4001-ace2-1230f9663945"
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:v1.5"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        3664,
+        1856
+      ],
+      "id": "0995e451-4894-4ae3-b398-58056cbc6aff",
+      "name": "Embeddings Ollama",
+      "credentials": {
+        "ollamaApi": {
+          "id": "OU561CFo570kuhq7",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nomic-embed-text:v1.5"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOllama",
+      "typeVersion": 1,
+      "position": [
+        992,
+        1024
+      ],
+      "id": "7b2376b8-35d5-4cd1-8bf1-273c69bb8625",
+      "name": "Embeddings Ollama1",
+      "credentials": {
+        "ollamaApi": {
+          "id": "OU561CFo570kuhq7",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "llama3.1:8b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        16,
+        624
+      ],
+      "id": "6615f8bb-60cd-4f72-8bd4-ae022db4a6ad",
+      "name": "llama3.1:8b",
+      "credentials": {
+        "ollamaApi": {
+          "id": "OU561CFo570kuhq7",
+          "name": "Ollama account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "model": "llama3.2:3b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        656,
+        224
+      ],
+      "id": "c6a53c9c-c61d-42ad-9440-c725e829398d",
+      "name": "llama3.2:3b",
+      "credentials": {
+        "ollamaApi": {
+          "id": "OU561CFo570kuhq7",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-large",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        3344,
+        1856
+      ],
+      "id": "febaa51d-93a2-4a98-97d9-532ee1a68434",
+      "name": "embed-v-4-",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "3o7EUGIGbieKbLTQ",
+          "name": "Azure Open AI account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "CREATE EXTENSION vector;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        256,
+        848
+      ],
+      "id": "d445f983-39ff-47b3-83a1-a3dd4cf01534",
+      "name": "Create Vector-Extension",
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-large",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        656,
+        1024
+      ],
+      "id": "02b93f26-e819-49e9-b432-8d1bd16dd74c",
+      "name": "embed-v-4-0",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "3o7EUGIGbieKbLTQ",
+          "name": "Azure Open AI account"
+        }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "TRUNCATE document_metadata;\nTRUNCATE documents;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        256,
+        1008
+      ],
+      "id": "b5c37106-739c-4b3a-856e-7179d944da77",
+      "name": "Clear Tables",
+      "credentials": {
+        "postgres": {
+          "id": "C9HJDvSGuGapYQYL",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2896,
+        1536
+      ],
+      "id": "abc37aea-d600-4cc6-a800-6e3a483e271f",
+      "name": "Insert Metadata"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "id, markdown",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        3104,
+        1536
+      ],
+      "id": "2c817374-3fba-42d2-af31-435a0d1c74d5",
+      "name": "Split Out"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Set Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Set Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Metadata": {
+      "main": [
+        [
+          {
+            "node": "Old Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List all Files in Postgres": {
+      "main": [
+        [
+          {
+            "node": "Get Project/Owner/Branch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Every 10 Minutes": {
+      "main": [
+        [
+          {
+            "node": "List all Files in Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List files": {
+      "main": [
+        [
+          {
+            "node": "Gitlab Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gitlab Files": {
+      "main": [
+        [
+          {
+            "node": "Get lastModified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items2": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Delete Old Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if new files or updated files1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a repository": {
+      "main": [
+        [
+          {
+            "node": "Has File?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader1": {
+      "ai_document": [
+        [
+          {
+            "node": "Postgres PGVector Store2",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter1": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader1",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store2": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete from documents": {
+      "main": [
+        [
+          {
+            "node": "Delete Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "data is not empty": {
+      "main": [
+        [
+          {
+            "node": "Postgres PGVector Store2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get File Contents": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set output": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Set output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Task": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Input": {
+      "main": [
+        [
+          {
+            "node": "If Task",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres PGVector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "File-Switch": {
+      "main": [
+        [
+          {
+            "node": "Extract from Text-File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from XML-File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call OCR-Workflow",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop Over Items2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from Text-File": {
+      "main": [
+        [
+          {
+            "node": "data is not empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from XML-File": {
+      "main": [
+        [
+          {
+            "node": "data is not empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Azure OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a Projectfile": {
+      "main": [
+        [
+          {
+            "node": "File-Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Submit File-Form": {
+      "main": [
+        [
+          {
+            "node": "Normalize Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has File?": {
+      "main": [
+        [
+          {
+            "node": "Get a file",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "List files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a file": {
+      "main": [
+        [
+          {
+            "node": "Get lastModified",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get lastModified": {
+      "main": [
+        [
+          {
+            "node": "Normailze Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normailze Data": {
+      "main": [
+        [
+          {
+            "node": "List Postgres Documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Documents": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Tool Agent": {
+      "main": [
+        [
+          {
+            "node": "Set output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Input": {
+      "main": [
+        [
+          {
+            "node": "Get a repository",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Project/Owner/Branch": {
+      "main": [
+        [
+          {
+            "node": "Get Filelist from Server",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Filelist from Server": {
+      "main": [
+        [
+          {
+            "node": "Files Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Files Only": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Old Files",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Old Files": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Delete from documents",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Document Metadata": {
+      "main": [
+        [
+          {
+            "node": "Get a Projectfile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Old Documents": {
+      "main": [
+        [
+          {
+            "node": "Insert Document Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Postgres Documents": {
+      "main": [
+        [
+          {
+            "node": "Check if new files or updated files1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab Create Branch": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab List Commits": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab Update File": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab List Issues": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab Create Merge Request": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab List Projects": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab List Branches": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab List Folders": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab Get File": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gitlab Create File": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab Create Issue": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GitLab List Users": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WebSearch (SearchApi)": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Tool Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call OCR-Workflow": {
+      "main": [
+        [
+          {
+            "node": "Insert Metadata",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store2",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Ollama1": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Postgres PGVector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "llama3.2:3b": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Metadata": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "data is not empty",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "versionId": "a4672aef-5ac9-44f3-b6a9-0f2a941cb9a7",
+  "meta": {
+    "instanceId": "2c715e088440d40221edbeca8c7cc5a511019c803826b88074d6ddffa66f0bab"
+  },
+  "id": "0u_jOVrp2m5jejj0rsg2a",
+  "tags": []
+}
