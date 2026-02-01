@@ -15,7 +15,7 @@
         768,
         176
       ],
-      "id": "1c6ce277-77b4-4bec-bb40-eda9556833e2",
+      "id": "157adf91-0e1e-4eae-b7dc-1177491f2dd5",
       "name": "Convert to File",
       "disabled": true
     },
@@ -63,7 +63,7 @@
         608,
         176
       ],
-      "id": "fb638f11-d8e7-4d97-931c-e7e6ad1f9533",
+      "id": "711bcf6b-4316-46ce-988c-684477807b1d",
       "name": "Set Data",
       "disabled": true
     },
@@ -93,7 +93,7 @@
         1408,
         176
       ],
-      "id": "13cd4bf4-e047-4ed1-a590-3c141e1589a9",
+      "id": "1eb10a7e-5d81-47a7-95b9-798f11090d6f",
       "name": "Final Set",
       "disabled": true
     },
@@ -108,7 +108,7 @@
         432,
         176
       ],
-      "id": "918de90a-571c-4afa-bc7e-7ae9c1e201fe",
+      "id": "5ffb78f3-c1f8-49a6-b89a-617f5290b77b",
       "name": "Split Out Images",
       "alwaysOutputData": true,
       "disabled": true
@@ -124,7 +124,7 @@
         32,
         192
       ],
-      "id": "0f7beba3-e3d0-4992-b5be-ba023a8ab845",
+      "id": "971deed4-d2b3-44cf-aab9-c5bbd8f6bd13",
       "name": "Split Out Pages",
       "disabled": true
     },
@@ -157,15 +157,9 @@
         -544,
         192
       ],
-      "id": "066c3784-6eae-4288-bcb4-4da3fefe7e88",
+      "id": "4ee95db8-fb4b-41b6-a0e4-28f62284d22b",
       "name": "Upload Document",
       "retryOnFail": true,
-      "credentials": {
-        "mistralCloudApi": {
-          "id": "2mlO2QqUpCIsxlOB",
-          "name": "Mistral Cloud account"
-        }
-      },
       "disabled": true
     },
     {
@@ -199,15 +193,9 @@
         -384,
         192
       ],
-      "id": "481fc4ef-3184-4210-af5a-994e34e47668",
+      "id": "d9e3e074-c98e-49e2-86a5-03413f131d0f",
       "name": "Get Signed URL",
       "retryOnFail": true,
-      "credentials": {
-        "mistralCloudApi": {
-          "id": "2mlO2QqUpCIsxlOB",
-          "name": "Mistral Cloud account"
-        }
-      },
       "disabled": true
     },
     {
@@ -236,15 +224,9 @@
         -208,
         192
       ],
-      "id": "1acc85d5-c378-4b5b-8ce0-212adc44e775",
+      "id": "0fbf3ae1-99de-401f-a2aa-3b99d973d52c",
       "name": "Get OCR Results",
       "retryOnFail": true,
-      "credentials": {
-        "mistralCloudApi": {
-          "id": "2mlO2QqUpCIsxlOB",
-          "name": "Mistral Cloud account"
-        }
-      },
       "disabled": true
     },
     {
@@ -279,7 +261,7 @@
         1104,
         176
       ],
-      "id": "68fc8c1d-c66b-4486-b2eb-4e1364708ae5",
+      "id": "eb62e733-f3fd-4cb1-822f-539c8dfde958",
       "name": "Set Data again",
       "disabled": true
     },
@@ -294,7 +276,7 @@
         1568,
         176
       ],
-      "id": "76c8edfa-e19c-4407-8d21-04ea9075a248",
+      "id": "372c3bf6-f771-4e4d-83d3-ef122a9fabe5",
       "name": "Split Out Pages again",
       "disabled": true
     },
@@ -309,7 +291,7 @@
         1760,
         176
       ],
-      "id": "f9f35826-0839-4499-8f70-461890bb726c",
+      "id": "216b71b7-e151-4af5-91bc-f1b7bda8c246",
       "name": "Exchange Image URLs",
       "disabled": true
     },
@@ -325,7 +307,7 @@
         1248,
         176
       ],
-      "id": "85ad108a-a21e-43f6-8159-338ea2bc6957",
+      "id": "2dbab5d6-3bb6-4e79-8e8a-c43c43cf4dab",
       "name": "Aggregate1",
       "disabled": true
     },
@@ -342,7 +324,7 @@
         0
       ],
       "typeVersion": 1,
-      "id": "f5414232-8d65-4fac-af4b-3f5932b9516d",
+      "id": "85a9dce1-3b1d-421b-84c1-ed648a38d154",
       "name": "Sticky Note6"
     },
     {
@@ -357,7 +339,7 @@
         80
       ],
       "typeVersion": 1,
-      "id": "9feb20af-d59b-40b6-a672-e5e59a88f618",
+      "id": "a75080fa-c7bc-4bf2-ac29-564a16123e4e",
       "name": "Sticky Note4",
       "disabled": true
     },
@@ -392,7 +374,7 @@
         224,
         192
       ],
-      "id": "de631c38-ff58-4494-9f1c-9e0fa92a8efe",
+      "id": "0d0c62de-c648-4e78-a331-54834d4167e3",
       "name": "Contains images?",
       "disabled": true
     },
@@ -404,7 +386,7 @@
         592,
         448
       ],
-      "id": "6f677fa6-e113-47bd-9abb-b40598370fa7",
+      "id": "db9667a0-e88b-45d2-93d3-4d60f9640c37",
       "name": "No Operation, do nothing"
     },
     {
@@ -417,7 +399,7 @@
         2576,
         432
       ],
-      "id": "ce5cb896-45cc-4bd6-be04-30fc84be9e4f",
+      "id": "5dd959fd-11d4-4a1c-8de3-68e4ddc370bd",
       "name": "Merge"
     },
     {
@@ -433,7 +415,7 @@
         112
       ],
       "typeVersion": 1,
-      "id": "826e7c6f-2101-4226-8e64-cc0dfb8b7acd",
+      "id": "17f5a93b-98a5-41d2-bf9b-51e267487fdd",
       "name": "Sticky Note",
       "disabled": true
     },
@@ -447,7 +429,7 @@
         -1008,
         688
       ],
-      "id": "c63a4184-2c1e-438e-bb14-0d3fa4efed38",
+      "id": "f4fc14cf-6a9d-4d6e-ab81-32cea918fe20",
       "name": "When Executed by Another Workflow"
     },
     {
@@ -460,7 +442,7 @@
         -768,
         192
       ],
-      "id": "1cbac272-cd03-43a6-a67b-d6ed317b4bfa",
+      "id": "446c838f-e674-4ab4-b112-cd4234512126",
       "name": "Code in JavaScript",
       "disabled": true
     },
@@ -475,7 +457,7 @@
         752,
         688
       ],
-      "id": "1417fc2b-e545-4dec-a2ef-a11210fe3dbf",
+      "id": "fbb26fc8-198f-46b5-9e3c-b0a66137720c",
       "name": "Read extracted images from disk"
     },
     {
@@ -491,11 +473,11 @@
         1024,
         688
       ],
-      "id": "b607bfff-3ffa-4fa8-8228-7784f2948c6f",
+      "id": "61dc126c-edd1-4400-9c2d-86fb12d14382",
       "name": "Upload to MinIO",
       "credentials": {
         "s3": {
-          "id": "Y4k9VcIM7BOTzmf6",
+          "id": "poCC3V0IskSqUoey",
           "name": "S3 account"
         }
       }
@@ -510,7 +492,7 @@
         2128,
         704
       ],
-      "id": "20dd1fcb-a3a5-4a90-8f72-b3376ea80c4b",
+      "id": "8c7b5dfd-4e88-495e-87a5-8a3eef34659f",
       "name": "Replace Image-References"
     },
     {
@@ -526,7 +508,7 @@
         416
       ],
       "typeVersion": 1,
-      "id": "e7c53bd3-df17-40c0-b5f1-c79aaf9c39fc",
+      "id": "f7e683c7-d9d3-486e-a0cc-664ff05b0ae7",
       "name": "Sticky Note1"
     },
     {
@@ -542,7 +524,7 @@
         608
       ],
       "typeVersion": 1,
-      "id": "31a238a5-a7e6-43be-8fab-25054b91bad5",
+      "id": "242ce31e-3066-476e-bbfc-ccafe879f3ed",
       "name": "Sticky Note2"
     },
     {
@@ -572,7 +554,7 @@
             },
             {
               "name": "picture_description_api",
-              "value": "{\n   \"url\": \"http://minio:11434\",\n   \"params\": {\n   \"model\": \"llava:7b\",\n   \"temperature\": 0,\n   \"stream\": false,\n   \"max_tokens\": 250\n   },\n   \"prompt\":\n   \"Beschreibe das Bild in 2-3 klaren Sätzen.\",\n   \"timeout\": 3600\n}"
+              "value": "{\n   \"url\": \"http://ollama:11434\",\n   \"params\": {\n   \"model\": \"llava:7b\",\n   \"temperature\": 0,\n   \"stream\": false,\n   \"max_tokens\": 250\n   },\n   \"prompt\":\n   \"Beschreibe das Bild in 2-3 klaren Sätzen.\",\n   \"timeout\": 3600\n}"
             }
           ]
         },
@@ -584,7 +566,7 @@
         -752,
         688
       ],
-      "id": "a323fdce-b16f-49c3-8284-dcc783b9889e",
+      "id": "2a594ea4-edc4-4827-8ba8-240b7bba0ac9",
       "name": "Scan by Docling"
     },
     {
@@ -651,7 +633,7 @@
         -560,
         672
       ],
-      "id": "2fe675e6-47fc-4ad4-b162-5bfaff0914e2",
+      "id": "9cb993b7-7da7-4f0d-8479-eb2962c20187",
       "name": "Switch"
     },
     {
@@ -665,7 +647,7 @@
         -192,
         800
       ],
-      "id": "29c8a6cc-2638-415d-ac5e-0e1052d77e3c",
+      "id": "fa871532-d070-483e-8923-41f9b2a01a7b",
       "name": "Poll Task"
     },
     {
@@ -679,7 +661,7 @@
         -192,
         640
       ],
-      "id": "0d3d458a-6902-4ac3-83da-78e1a69ff1b4",
+      "id": "534c32c8-28ce-4254-95c0-6ad0498f3461",
       "name": "Get Scan-Result"
     },
     {
@@ -692,7 +674,7 @@
         48,
         672
       ],
-      "id": "763ce061-7c69-4689-9c44-dfdd35fa99fd",
+      "id": "a4ebef42-f8f6-4be0-b481-263d74ac69da",
       "name": "Extract List of Images"
     },
     {
@@ -706,7 +688,7 @@
         560,
         688
       ],
-      "id": "b924d8d9-627c-42bb-9016-b0bcc9921508",
+      "id": "73e9dba8-4cb9-4b99-9eb9-27f0d452a42c",
       "name": "Get Image-Names"
     },
     {
@@ -721,11 +703,11 @@
         1568,
         672
       ],
-      "id": "0c369418-30da-401e-abd3-dab8030ff0d4",
+      "id": "e8c3beb0-2af7-4287-9659-1d6062647dfe",
       "name": "JWT",
       "credentials": {
         "jwtAuth": {
-          "id": "GWri5NTG2EmkRR9m",
+          "id": "ETdtUJmwgGWSKAC7",
           "name": "JWT Auth account"
         }
       }
@@ -750,7 +732,7 @@
         1744,
         672
       ],
-      "id": "45978ce5-9e9b-4f71-b396-8ea27c6694e1",
+      "id": "7839c312-100b-4b1d-b635-5baf23a420b3",
       "name": "Build Signed URLs"
     },
     {
@@ -766,7 +748,7 @@
         608
       ],
       "typeVersion": 1,
-      "id": "a4183cd9-c5a8-4613-a29e-133e604f05bd",
+      "id": "128224ef-b554-4acb-98bd-81711d8398b5",
       "name": "Sticky Note3"
     },
     {
@@ -779,7 +761,7 @@
         416,
         688
       ],
-      "id": "ed36032f-ebe6-4d36-a7d2-5238806ab954",
+      "id": "1ed0d30e-c68e-4819-a0ef-8977e7f1cb8f",
       "name": "Wait 20s",
       "webhookId": "98583a5a-6360-4f1e-81a8-acfd9aad2d0b"
     },
@@ -793,7 +775,7 @@
         -336,
         800
       ],
-      "id": "b385536f-1fd3-4da8-b850-5b179267329f",
+      "id": "2cf95247-9f6c-46b2-9b93-1b6cea7582f4",
       "name": "Wait 30s",
       "webhookId": "03dd7a06-d09b-4ea9-bbbd-f92b76b049b0"
     },
@@ -810,11 +792,11 @@
         944,
         176
       ],
-      "id": "64144aa9-26cc-4176-9b13-297bf55984aa",
+      "id": "ff340e1e-9795-461c-8b37-ba0139a34705",
       "name": "Upload to MinIO1",
       "credentials": {
         "s3": {
-          "id": "Y4k9VcIM7BOTzmf6",
+          "id": "poCC3V0IskSqUoey",
           "name": "S3 account"
         }
       },
@@ -832,7 +814,7 @@
         1744,
         1008
       ],
-      "id": "eaa96f70-67e3-4ec9-b1cf-f1a034a81fb7",
+      "id": "e70664af-3b3e-4eec-80d7-b1219a96bad1",
       "name": "Extract from File"
     },
     {
@@ -847,7 +829,7 @@
         1952,
         704
       ],
-      "id": "11cdd172-7b5f-45af-80db-7f69cb36b3ef",
+      "id": "98c606d3-d309-4553-9fd2-04bb3defc6ef",
       "name": "Combine URLs & Base64 Data"
     },
     {
@@ -881,7 +863,7 @@
         240,
         672
       ],
-      "id": "94df449c-e10c-4b07-8329-368195d8cde0",
+      "id": "6d3d4c0b-e5e3-4a22-9d82-8832be97202b",
       "name": "Contains no images?"
     },
     {
@@ -895,7 +877,7 @@
         -192,
         448
       ],
-      "id": "717c57c0-1338-430d-ae1e-6a4588c2ce04",
+      "id": "c270f8bd-fa8b-4ddd-adf9-ea9f729a88a2",
       "name": "Get Failure-Result"
     },
     {
@@ -929,7 +911,7 @@
         1360,
         688
       ],
-      "id": "9b3ac181-855b-4260-873e-fc949549c274",
+      "id": "141b3257-f78a-496b-9e21-c49b3012b7c8",
       "name": "Use signed URLs?"
     },
     {
@@ -940,7 +922,7 @@
         1024,
         1008
       ],
-      "id": "2b434265-cfdf-4f84-9b2b-39baab22fc56",
+      "id": "d88143d2-75bf-4d08-ada2-6bdc06e47f65",
       "name": "No Operation, do nothing1"
     },
     {
@@ -963,7 +945,7 @@
         1744,
         848
       ],
-      "id": "92a0b6bd-dd79-4d83-b1ee-7d8ff25a3379",
+      "id": "af006d18-0c6e-4ff2-a68f-a843503b8a70",
       "name": "Build unsigned URLs"
     },
     {
@@ -986,7 +968,7 @@
         1200,
         688
       ],
-      "id": "af532791-45a6-44f5-a207-09ee3489aab6",
+      "id": "c1e2917c-10f3-455e-b14b-40156ca6f93d",
       "name": "Enable signed URLs"
     }
   ],
@@ -1456,11 +1438,11 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "2ba7eaa7-08f3-43f0-957d-60ec548aaca0",
+  "versionId": "0ebab4ef-5925-4133-be5d-5b85a4ab95ca",
   "meta": {
     "templateCredsSetupCompleted": true,
-    "instanceId": "2c715e088440d40221edbeca8c7cc5a511019c803826b88074d6ddffa66f0bab"
+    "instanceId": "0b642c24244c9131736e3116bc5771dcc548e8749bdd9ed256dceeaa51f05a56"
   },
-  "id": "LFr4Vh2SeGUGZifnSEQVy",
+  "id": "XAdGYq-gfg3cXykIBed8w",
   "tags": []
 }

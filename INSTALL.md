@@ -149,13 +149,26 @@ sudo docker compose pull
 
 ---
 
+## MinIO Lizenz
+
+Die Minio-Lizenz muss für den erfolgreichen Start im selben Verzeichnis wie die Compose-Datei liegen.
+Eine Lizenz kann über folgenden Link bezogen werden: [https://www.min.io/download]
+
+```bash
+# Lizenz-Datei aus dem Benutzer-Verzeichnis kopieren.
+cp ~/minio.license .
+
+```
+
+---
+
 ## TLS-Zertifikate
 
 Beim ersten Start muss Nginx im Init-Modus gestartet werden, um die Let's Encrypt Zertifikate zu generieren:
 
 ```bash
 # Nginx im Init-Modus starten
-sudo docker compose up -d nginx
+sudo docker compose up nginx -d
 
 # Zertifikate anfordern (Domains anpassen!)
 sudo docker compose run --rm --entrypoint certbot certbot certonly \
@@ -212,28 +225,14 @@ Für die signierte URL-Generierung im OCR-Workflow werden RSA-Schlüssel benöti
 
 ```bash
 # Verzeichnis erstellen
-mkdir -p ~/minio-jwt-keys
-cd ~/minio-jwt-keys
+mkdir -p minio-jwt-keys
+cd minio-jwt-keys
 
 # Private Key generieren (für n8n)
 openssl genpkey -algorithm RSA -out private.pem -pkeyopt rsa_keygen_bits:2048
 
 # Public Key extrahieren (für Nginx)
 openssl rsa -pubout -in private.pem -out public.pem
-```
-
-### Keys in n8n eintragen
-
-1. Öffne n8n: `https://n8n.<host>.<domain>/`
-2. Öffne den **OCR-Workflow**
-3. Bearbeite den **JWT-Knoten**
-4. Erstelle neue Credentials mit dem Inhalt von `private.pem`
-
-### Public Key für Nginx
-
-```bash
-# Public Key in den Nginx-Container kopieren
-sudo cp ~/minio-jwt-keys/public.pem /opt/ai-lab/nginx/keys/
 ```
 
 ---
@@ -266,15 +265,6 @@ sudo cp ~/minio-jwt-keys/public.pem /opt/ai-lab/nginx/keys/
 2. Erstelle einen neuen Access Key
 3. Notiere **Access Key** und **Secret Key**
 
-### S3-Credentials in n8n eintragen
-
-1. Öffne n8n
-2. Erstelle neue **S3-Credentials**:
-   - **Endpoint:** `http://minio:9000`
-   - **Access Key:** (aus MinIO)
-   - **Secret Key:** (aus MinIO)
-   - **Force Path Style:** ✅ Aktivieren
-
 ---
 
 ## MinIO UI deaktivieren
@@ -283,14 +273,186 @@ Um den anonymen MinIO-Zugang mit JWT-Validierung abzusichern:
 
 ```bash
 cd /opt/ai-lab
+nano compose.yml
 
 # Port 9001 in compose.yml deaktivieren (auskommentieren)
+# ports:
 # - "9001:9001"
 
 # Services neu starten
 sudo docker compose down nginx minio
-sudo docker compose up -d nginx minio
+sudo docker compose up nginx minio -d
 ```
+
+---
+
+## n8n Einrichtung
+
+1. Öffne `https://n8n.<host>.<domain>` im Browser
+2. erstelle einen Admin-Account
+
+### Workflows importieren
+
+1. Für den ersten Workflow auf "Start from Scrath" klicken
+2. Import from URL `https://<host>.<domain>/workflows/GitLab_Ai_Agent.json`
+
+1. Für alle weiteren Workflows auf "Create workflow" klicken
+2. Import from URL `https://<host>.<domain>/workflows/OCR_Workflow.json`
+
+### Credentials anlegen
+
+Öffne den `OCR-Workflow` in n8n und erstelle folgende Credentials:
+
+### 1. S3-Credentials in n8n eintragen
+
+| Feld | Wert |
+|------|------|
+| **S3 Endpoint** | `http://minio:9000` |
+| **Region** | `us-east-1` |
+| **Access Key ID** | <Wert aus MinIO> |
+| **Secret Access Key** | <Wert aus MinIO> |
+| **Force Path Style** | ✅ Aktivieren |
+
+### 2. JWT-Zertifikate
+
+| Feld | Wert |
+|------|------|
+| **Key Type** | `PEM Key` |
+| **Private Key** | Inhalt der Datei `minio-jwt-keys/private.pem` |
+| **Public Key** | Inhalt der Datei `minio-jwt-keys/public.pem` |
+| **Algorithm** | `RS256` |
+
+Der Workflow kann anschliessend veröffentlicht werden.
+Öffne den `GitLab Ai Agent` in n8n und erstelle folgende Credentials:
+
+#### 1. Webhook Authentication
+
+| Feld | Wert |
+|------|------|
+| **Name** | `Authorization` |
+| **Value** | `Bearer <token>` |
+
+> **Wichtig:** Notiere den Token (z.B. `1234`) – dieser wird später für OpenWebUI benötigt.
+
+#### 2. Ollama
+
+| Feld | Wert |
+|------|------|
+| **Base URL** | `http://ollama:11434` |
+| **API Key** | (leer lassen) |
+
+#### 3. PostgreSQL
+
+| Feld | Wert |
+|------|------|
+| **Host** | `postgres` |
+| **Database** | `postgres` |
+| **User** | (aus `.env`) |
+| **Password** | (aus `.env`) |
+
+#### 4. SerpAPI
+
+1. Registriere dich auf [serpapi.com](https://serpapi.com/)
+2. Trage den API-Key ein
+
+#### 5. GitLab
+
+1. Generiere einen **Personal Access Token** auf deinem GitLab-Server
+2. Trage die Werte ein:
+   - **URL:** URL deines GitLab-Servers
+   - **Access Token:** Personal Access Token
+3. Aktiviere die Credentials für **alle GitLab-Tool-Knoten**
+
+#### 6. Azure OpenAI (Optional)
+
+| Feld | Wert |
+|------|------|
+| **API Key** | (aus AI Foundry) |
+| **Resource Name** | (Name der Ressource in AI Foundry) |
+| **Endpoint** | (aus AI Foundry) |
+
+### Workflows verbinden
+
+1. Öffne den **GitLab AI Agent** Workflow
+2. Den Node `Call OCR-Workflow` öffnen.
+3. Aus der liste den Workflow erneut auswählen.
+
+### Datenbank initialisieren
+
+1. Öffne den **GitLab AI Agent** Workflow
+2. Führe den Knoten **Create Document Metadata Table** aus
+3. Führe den Knoten **Create Vector-Extension** aus
+
+## RAG mit Dokumenten füllen
+
+1. Öffne den **GitLab AI Agent** Workflow
+2. Workflow veröffentlichen
+3. Öffne den Node `Submit File-Form`
+4. Kopiere die **Production URL**
+
+> **Hinweis:** Die URL hat zwei Formate:
+> - **Intern (im Stack):** `http://n8n:5678/form/<id>`
+> - **Extern (Browser):** `https://n8n.<host>.<domain>/form/<id>`
+
+5. Öffne die **Form-URL** des GitLab AI Agent:
+   `https://n8n.<host>.<domain>/form/<form-id>`
+6. Gib die Repository-URL an
+7. Optional: Spezifische Datei angeben, sonst wird das gesamte Repository indexiert
+
+---
+
+## Open-WebUI mit n8n verbinden
+
+### Funktion in Open-WebUI importieren
+
+1. Öffne OpenWebUI: `https://<host>.<domain>/`
+2. Wechsle in den **Admin-Bereich**
+3. Navigiere zu **Funktionen**
+4. Klicke auf **Neue Funktion**
+5. Wähle **Von Link importieren**
+6. Importiere die Funktion aus:
+   `https://<host>.<domain>/functions/function-n8n_pipe.json`
+7. **Speichern und bestätigen**
+
+### Webhook-URL notieren
+
+1. Öffne in n8n den **GitLab AI Agent** Workflow
+2. Öffne den **Webhook-Knoten**
+3. Kopiere die **Production URL**
+
+> **Hinweis:** Die URL hat zwei Formate:
+> - **Intern (im Stack):** `http://n8n:5678/webhook/<id>`
+> - **Extern (Browser):** `https://n8n.<host>.<domain>/webhook/<id>`
+
+### Funktion konfigurieren
+
+1. Klicke auf das **Zahnrad** neben der Funktion
+2. Konfiguriere die Werte:
+
+| Feld | Wert |
+|------|------|
+| **N8N URL** | `http://n8n:5678/webhook/<webhook-id>` |
+| **N8N Bearer Token** | Token aus den Webhook-Credentials (z.B. `1234`) |
+
+3. **Speichern**
+4. **Funktion aktivieren** (Schieberegler nach rechts)
+
+### Verwendung
+
+Nach der Aktivierung steht in OpenWebUI ein neues Modell **n8n Pipe Function** zur Verfügung. Alle Eingaben werden an den n8n-Workflow weitergeleitet und die Antworten in OpenWebUI angezeigt.
+
+---
+
+## URLs
+
+Nach erfolgreicher Installation sind folgende Endpunkte verfügbar:
+
+| Dienst | URL |
+|--------|-----|
+| **OpenWebUI** | `https://<host>.<domain>/` |
+| **n8n** | `https://n8n.<host>.<domain>/` |
+| **MinIO API** | `https://s3.<host>.<domain>/` (nach Secured Mode nur intern) |
+| **MinIO n8n-Bucket** | `https://s3.<host>.<domain>/n8n/` |
 
 ---
 
@@ -355,135 +517,6 @@ sudo docker compose restart nginx
 ```
 
 Anschließend im OCR-Workflow den Node **Enable signed URLs** wieder auf `false` setzen.
-
----
-
-## n8n Workflow Konfiguration
-
-### Credentials anlegen
-
-Öffne n8n und erstelle folgende Credentials:
-
-#### 1. Webhook Authentication
-
-| Feld | Wert |
-|------|------|
-| **Name** | `Authorization` |
-| **Value** | `Bearer <token>` |
-
-> **Wichtig:** Notiere den Token (z.B. `1234`) – dieser wird später für OpenWebUI benötigt.
-
-#### 2. Ollama
-
-| Feld | Wert |
-|------|------|
-| **Base URL** | `http://ollama:11434` |
-| **API Key** | (leer lassen) |
-
-#### 3. PostgreSQL
-
-| Feld | Wert |
-|------|------|
-| **Host** | `postgres` |
-| **Database** | `postgres` |
-| **User** | (aus `.env`) |
-| **Password** | (aus `.env`) |
-
-#### 4. Azure OpenAI (Optional)
-
-| Feld | Wert |
-|------|------|
-| **API Key** | (aus AI Foundry) |
-| **Resource Name** | (Name der Ressource in AI Foundry) |
-| **Endpoint** | (aus AI Foundry) |
-
-#### 5. SerpAPI (Optional)
-
-1. Registriere dich auf [serpapi.com](https://serpapi.com/)
-2. Trage den API-Key ein
-
-#### 6. GitLab
-
-1. Generiere einen **Personal Access Token** auf deinem GitLab-Server
-2. Trage die Werte ein:
-   - **URL:** URL deines GitLab-Servers
-   - **Access Token:** Personal Access Token
-3. Aktiviere die Credentials für **alle GitLab-Tool-Knoten**
-
-### Datenbank initialisieren
-
-1. Öffne den **GitLab AI Agent** Workflow
-2. Führe den Knoten **Create Document Metadata Table** aus
-3. Führe den Knoten **Create Vector-Extension** aus
-
-### Workflows veröffentlichen
-
-1. **OCR-Workflow** speichern und veröffentlichen
-2. Im **GitLab AI Agent**:
-   - Knoten **Call OCR-Workflow** bearbeiten
-   - Den veröffentlichten OCR-Workflow neu auswählen
-3. **GitLab AI Agent** speichern und veröffentlichen
-
-### Webhook-URL notieren
-
-1. Öffne den **GitLab AI Agent** Workflow
-2. Klicke auf den **Webhook-Knoten**
-3. Kopiere die **Production URL**
-
-> **Hinweis:** Die URL hat zwei Formate:
-> - **Intern (im Stack):** `http://n8n:5678/webhook/<id>`
-> - **Extern (Browser):** `https://n8n.<host>.<domain>/webhook/<id>`
-
-### RAG mit Dokumenten füllen
-
-1. Öffne die **Form-URL** des GitLab AI Agent:
-   `https://n8n.<host>.<domain>/form/<form-id>`
-2. Gib die Repository-URL an
-3. Optional: Spezifische Datei angeben, sonst wird das gesamte Repository indexiert
-
----
-
-## OpenWebUI mit n8n verbinden
-
-### Funktion importieren
-
-1. Öffne OpenWebUI: `https://<host>.<domain>/`
-2. Wechsle in den **Admin-Bereich**
-3. Navigiere zu **Funktionen**
-4. Klicke auf **Neue Funktion**
-5. Wähle **Von Link importieren**
-6. Importiere die Funktion aus:
-   `https://<host>.<domain>/functions/function-n8n_pipe.json`
-7. **Speichern und bestätigen**
-
-### Funktion konfigurieren
-
-1. Klicke auf das **Zahnrad** neben der Funktion
-2. Konfiguriere die Werte:
-
-| Feld | Wert |
-|------|------|
-| **N8N URL** | `http://n8n:5678/webhook/<webhook-id>` |
-| **N8N Bearer Token** | Token aus den Webhook-Credentials (z.B. `1234`) |
-
-3. **Speichern**
-4. **Funktion aktivieren** (Schieberegler nach rechts)
-
-### Verwendung
-
-Nach der Aktivierung steht in OpenWebUI ein neues Modell **n8n Pipe Function** zur Verfügung. Alle Eingaben werden an den n8n-Workflow weitergeleitet und die Antworten in OpenWebUI angezeigt.
-
----
-
-## URLs
-
-Nach erfolgreicher Installation sind folgende Endpunkte verfügbar:
-
-| Dienst | URL |
-|--------|-----|
-| **OpenWebUI** | `https://<host>.<domain>/` |
-| **n8n** | `https://n8n.<host>.<domain>/` |
-| **MinIO Console** | `https://s3.<host>.<domain>/` (nach Secured Mode nur intern) |
 
 ---
 

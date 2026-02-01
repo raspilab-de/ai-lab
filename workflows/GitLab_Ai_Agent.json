@@ -7,7 +7,7 @@
         "height": 433,
         "width": 588
       },
-      "id": "e026f69e-cfdf-4400-90c6-0f79b8a8d728",
+      "id": "2dc7a682-136f-4af6-b81d-8f367d0511af",
       "name": "Sticky Note2",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -21,7 +21,7 @@
         "public": true,
         "options": {}
       },
-      "id": "f21b21df-5633-44b9-8f50-2354d205db25",
+      "id": "91ab94f8-ed45-4b22-8aba-dddde5b58078",
       "name": "When chat message received",
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.1,
@@ -44,7 +44,7 @@
         800
       ],
       "typeVersion": 1,
-      "id": "29e2caf9-1729-476a-b30b-a153bef9636e",
+      "id": "ab7cca0b-0eda-47c5-ad6a-9cf732d1a254",
       "name": "Sticky Note3"
     },
     {
@@ -55,7 +55,7 @@
           "queryReplacement": "={{ $('Old Files').item.json.id }}"
         }
       },
-      "id": "8d68cb5d-7b68-4e41-9dd5-2cb26cf2455f",
+      "id": "8ba82f95-604d-46f5-b90e-384bd5c2f9e8",
       "name": "Delete Metadata",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
@@ -65,7 +65,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -84,12 +84,12 @@
         48,
         288
       ],
-      "id": "90c7d2e0-eaa7-4676-85f8-4667ba42c597",
+      "id": "33ab87a3-59a0-40d3-aa1a-a7e008bacdb9",
       "name": "Webhook",
       "webhookId": "c7ab7071-12a9-4c61-9127-e99d760e0299",
       "credentials": {
         "httpHeaderAuth": {
-          "id": "7DRz9ORMF0ooORf9",
+          "id": "zSAEZbtw1eGl44lu",
           "name": "Header Auth account"
         }
       }
@@ -106,13 +106,13 @@
         256,
         2208
       ],
-      "id": "b0d2aec1-d2ba-4009-8e10-7cb29099909c",
+      "id": "b00e14ed-ab47-4ee9-9574-3e88774d9e5c",
       "name": "List all Files in Postgres",
       "alwaysOutputData": true,
       "executeOnce": true,
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -127,7 +127,7 @@
           ]
         }
       },
-      "id": "78dc3d6d-35e6-45a5-aa40-53047f93b744",
+      "id": "6cc4fbf9-27fd-4003-8ed8-bd78bc937376",
       "name": "Check Every 10 Minutes",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.1,
@@ -154,11 +154,11 @@
         704,
         1488
       ],
-      "id": "5f3966f6-e46e-49d4-a773-77824eb65241",
+      "id": "f5dfd523-5ef6-4b95-ab65-e648413db511",
       "name": "List files",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -173,7 +173,7 @@
         1504,
         1488
       ],
-      "id": "53a25184-6e05-4f1e-8f70-cc16af7f8a53",
+      "id": "3168a27b-84db-4ab0-b938-8ee60d306578",
       "name": "Check if new files or updated files1"
     },
     {
@@ -207,7 +207,7 @@
         832,
         1488
       ],
-      "id": "be1be350-013b-4c22-9689-deeb74519738",
+      "id": "9ffed647-ae1e-414e-b7f5-32afa7c85dfb",
       "name": "Gitlab Files"
     },
     {
@@ -222,7 +222,7 @@
         1696,
         1488
       ],
-      "id": "210fce6a-72ab-4fd8-aa7c-6a8ec007bdec",
+      "id": "c046320c-bde2-45d0-9e07-6611edb945a6",
       "name": "Loop Over Items2"
     },
     {
@@ -238,11 +238,11 @@
         400,
         1472
       ],
-      "id": "55476380-b4f4-4297-93fc-6c26bc96498f",
+      "id": "285162d9-58ed-474e-bcc0-65656dd8646d",
       "name": "Get a repository",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -274,7 +274,7 @@
           }
         }
       },
-      "id": "f5b39cd1-4c61-495e-bd7e-1bfbf5e3ca72",
+      "id": "3c1bd0db-d92e-4783-a5d2-54277881a49a",
       "name": "Default Data Loader1",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1,
@@ -295,11 +295,11 @@
         3712,
         1552
       ],
-      "id": "f84bcfc4-de44-492a-83be-33ab923734c5",
+      "id": "dee8f2dd-6fa4-4ad2-9242-5ac4401b7025",
       "name": "Postgres PGVector Store2",
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -316,7 +316,7 @@
         3808,
         2000
       ],
-      "id": "8ef4bcdf-d5c9-477a-8f7a-10379e259546",
+      "id": "b4a60719-0c27-4374-8913-436306387644",
       "name": "Recursive Character Text Splitter1"
     },
     {
@@ -333,11 +333,11 @@
         1584,
         2240
       ],
-      "id": "9e0ae3b2-3737-454e-99d3-024a4031572c",
+      "id": "2dba11c6-8753-4132-a631-252108bd01c3",
       "name": "Delete from documents",
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -352,8 +352,14 @@
         3488,
         1856
       ],
-      "id": "be2674e9-ca1b-4b5d-a697-618f9832bd29",
+      "id": "dc7275f7-c2ae-4f7c-b900-3868652d4c49",
       "name": "Embeddings AWS Bedrock2",
+      "credentials": {
+        "aws": {
+          "id": "azjHlu1TqDYyQs88",
+          "name": "AWS (IAM) account"
+        }
+      },
       "disabled": true
     },
     {
@@ -388,7 +394,7 @@
         3552,
         1536
       ],
-      "id": "851693da-9d98-4d00-9b1b-761cb88ffbbd",
+      "id": "b6593730-b074-47cb-9616-345d3b48a396",
       "name": "data is not empty"
     },
     {
@@ -407,11 +413,11 @@
         1280,
         1008
       ],
-      "id": "5a8af16e-d240-4405-bca8-d2a484c348e4",
+      "id": "669a35da-416b-4575-8022-4cf6f60a2536",
       "name": "Get File Contents",
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -426,7 +432,7 @@
         1136,
         1024
       ],
-      "id": "887e2151-fa01-43e1-a443-0c8b6fc9eba2",
+      "id": "67386af2-f2af-4ccf-a0b8-8e1f4caa26ef",
       "name": "Reranker Cohere",
       "disabled": true
     },
@@ -440,8 +446,14 @@
         816,
         1024
       ],
-      "id": "a123d5a8-256d-4bc9-9853-5531b3cd2f72",
+      "id": "df7697cc-3be5-445e-b54a-84db15947462",
       "name": "AWS Bedrock Titan Embedding G2",
+      "credentials": {
+        "aws": {
+          "id": "azjHlu1TqDYyQs88",
+          "name": "AWS (IAM) account"
+        }
+      },
       "disabled": true
     },
     {
@@ -451,7 +463,7 @@
             {
               "id": "6e7b90b3-631d-4cef-b119-fe4d2bccaf46",
               "name": "output",
-              "value": "={{ $if($('AI Tool Agent').isExecuted, $('AI Tool Agent').item.json.output, $json.text) }}",
+              "value": "={{ $if($('AI Agent').isExecuted, $('AI Agent').item.json.output, $json.text) }}",
               "type": "string"
             }
           ]
@@ -464,14 +476,14 @@
         1024,
         64
       ],
-      "id": "a4c0ba7e-61c9-474d-bcf3-801d6230df22",
+      "id": "ff1340f9-5d34-4951-8655-000348ce81ce",
       "name": "Set output"
     },
     {
       "parameters": {
         "options": {}
       },
-      "id": "e858eee5-4e34-40ca-a482-c98de9b8a1c7",
+      "id": "23ef0ea7-e0a1-4c71-84cc-8c5f858f7cf0",
       "name": "Respond to Webhook",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
@@ -492,7 +504,7 @@
         656,
         64
       ],
-      "id": "5ae300ca-8ae2-46e5-b1a2-6fd7ca5be6ff",
+      "id": "7c2775ad-4e2b-488c-a6f8-212398f46ab9",
       "name": "Basic LLM Chain"
     },
     {
@@ -525,7 +537,7 @@
         448,
         80
       ],
-      "id": "38c905e6-3740-4032-aa5f-ced68e9f0b07",
+      "id": "465bdcd3-b18c-4529-8721-53771d18568a",
       "name": "If Task"
     },
     {
@@ -554,7 +566,7 @@
         },
         "options": {}
       },
-      "id": "444d974c-f00b-4294-bc09-deb1cd32610c",
+      "id": "51ae76bc-09ca-45d6-bccd-48642af298c6",
       "name": "Set Input",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -571,7 +583,7 @@
         "topK": 20,
         "options": {}
       },
-      "id": "2302df43-ff38-43c8-88a9-81e26c3f9375",
+      "id": "7c2c1690-71d2-4dac-b0cb-1052bf59f1f1",
       "name": "Postgres PGVector Store",
       "type": "@n8n/n8n-nodes-langchain.vectorStorePGVector",
       "typeVersion": 1.3,
@@ -581,7 +593,7 @@
       ],
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -671,7 +683,7 @@
           "fallbackOutput": "extra"
         }
       },
-      "id": "450ed060-bf38-49ee-bcd5-be9dec4c68af",
+      "id": "c8509e5a-0eed-44f3-8ea2-b3b4c8a4b4ef",
       "name": "File-Switch",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
@@ -691,7 +703,7 @@
         3104,
         1216
       ],
-      "id": "6f1697eb-6f6d-4d40-a95a-96bdce37b743",
+      "id": "46e5509f-eec4-4292-b8fb-b43ce9f64253",
       "name": "Extract from Text-File"
     },
     {
@@ -705,7 +717,7 @@
         3104,
         1376
       ],
-      "id": "63b5944f-033c-4b87-b830-d0667f3da94b",
+      "id": "7ac31e93-2c76-4d15-8077-74c4e6b695e6",
       "name": "Extract from XML-File"
     },
     {
@@ -722,32 +734,39 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
       "position": [
-        464,
+        176,
         624
       ],
-      "id": "0591cc06-36fd-464b-960a-1ac3f205e150",
+      "id": "c30eec6f-34f2-445d-b1e5-569b456d0bd4",
       "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "iZVmc8ZeF88QeS4w",
+          "name": "OpenAi account"
+        }
+      },
       "disabled": true
     },
     {
       "parameters": {
-        "model": "gpt-oss-120b",
+        "model": "gpt-5.1-chat",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
       "typeVersion": 1,
       "position": [
-        656,
-        640
+        480,
+        624
       ],
-      "id": "a326742a-31ea-484b-b1f7-9cbb0f63d72d",
+      "id": "5dc9e3ad-558c-426e-a5f1-37bc95287041",
       "name": "Azure OpenAI Chat Model",
       "credentials": {
         "azureOpenAiApi": {
-          "id": "3o7EUGIGbieKbLTQ",
+          "id": "2fib0Fsn4iWUagmI",
           "name": "Azure Open AI account"
         }
-      }
+      },
+      "disabled": true
     },
     {
       "parameters": {
@@ -780,9 +799,9 @@
         48,
         1472
       ],
-      "id": "dc9729d7-4df6-42aa-a68d-b6c8279f33d4",
+      "id": "364e32a7-f62f-40c4-a573-abeb109ec360",
       "name": "Submit File-Form",
-      "webhookId": "14c2d368-7874-45f2-a0c7-f3afd48f711b"
+      "webhookId": "085d89ca-028d-42b7-a081-8ab4c964d986"
     },
     {
       "parameters": {
@@ -801,11 +820,11 @@
         2240,
         1504
       ],
-      "id": "82221ea4-7a39-4967-94ae-32a2973ee6e0",
+      "id": "6225b1cc-c90a-46e7-8a4e-8bb724bab423",
       "name": "Get a Projectfile",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -841,7 +860,7 @@
         544,
         1472
       ],
-      "id": "6940ee6c-2d57-4ae9-bf16-270a18203d6c",
+      "id": "5dfbbe7b-543c-4010-b5f3-124bab4fd083",
       "name": "Has File?"
     },
     {
@@ -862,11 +881,11 @@
         768,
         1344
       ],
-      "id": "c3a37135-8e80-4bea-8224-3bc7c3333e20",
+      "id": "e7e64b03-71c3-4c8f-805b-0b076b676bdd",
       "name": "Get a file",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -883,11 +902,11 @@
         32,
         1008
       ],
-      "id": "6c9356ca-ff34-4919-8959-4c3c5c73bb81",
+      "id": "76a33df7-9c2d-4512-9fd8-6881839e4f0b",
       "name": "Create Document Metadata Table",
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -895,9 +914,9 @@
     {
       "parameters": {
         "sessionIdType": "customKey",
-        "sessionKey": "={{ $('Set Input').item.json.sessionId }}"
+        "sessionKey": "={{ $json.sessionId }}"
       },
-      "id": "1223c603-e64e-4e19-b534-4bb9cf42c895",
+      "id": "7ed6e3aa-bf9b-4dda-9e9d-f5d0e6308a5e",
       "name": "Postgres Chat Memory",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1,
@@ -908,7 +927,7 @@
       "notesInFlow": false,
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -935,11 +954,11 @@
         992,
         1488
       ],
-      "id": "b55e9cef-c981-4fd5-a394-594f3ce53a0a",
+      "id": "26c6cb20-107d-4f2c-8021-522e4be4ed07",
       "name": "Get lastModified",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1030,7 +1049,7 @@
         1136,
         1488
       ],
-      "id": "9a020b88-539d-4f0a-b404-817d4d7a3de9",
+      "id": "ccf3328c-7d76-4ccc-9ac4-30c0bcc42729",
       "name": "Normailze Data"
     },
     {
@@ -1058,11 +1077,11 @@
         1328,
         864
       ],
-      "id": "00e68069-a2dd-4d6f-92db-e6c7b3ae23e2",
+      "id": "c0e323f1-a61c-439c-964f-ccbb11b51dba",
       "name": "List Documents",
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -1078,8 +1097,14 @@
         800,
         224
       ],
-      "id": "edd6e72c-89e3-4072-944c-1736db61266e",
+      "id": "b9e112e8-1076-4acd-99ea-126c0cb127b3",
       "name": "LLM Tasker Qwen3 32b (dense)",
+      "credentials": {
+        "aws": {
+          "id": "azjHlu1TqDYyQs88",
+          "name": "AWS (IAM) account"
+        }
+      },
       "disabled": true
     },
     {
@@ -1089,7 +1114,7 @@
         "width": 1812,
         "color": 5
       },
-      "id": "21b723d9-7589-4d36-b790-811e60423fa5",
+      "id": "cc050119-5eb2-417f-87f0-0a932036fbe4",
       "name": "Sticky Note - GitLab",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -1104,7 +1129,7 @@
         "height": 225,
         "width": 396
       },
-      "id": "1de18645-1a05-4816-b4e8-bc675dc8de2a",
+      "id": "0de43f83-ef97-4d5e-b38d-e32e98451c6b",
       "name": "Sticky Note",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
@@ -1126,7 +1151,7 @@
         0
       ],
       "typeVersion": 1,
-      "id": "9d655ad0-1e23-4899-b479-04229d035103",
+      "id": "5ca1e7b0-af5d-4c3d-a8e1-aa422632a587",
       "name": "Sticky Note5"
     },
     {
@@ -1142,7 +1167,7 @@
         384
       ],
       "typeVersion": 1,
-      "id": "80cd9f43-64d4-4f65-b8b0-e87c826b1ff4",
+      "id": "c246eb32-d5c5-46de-bb72-b93160aa6907",
       "name": "Sticky Note6"
     },
     {
@@ -1163,12 +1188,12 @@
         1472,
         864
       ],
-      "id": "1a31c1f1-7b42-4369-a191-8fda51e92291",
+      "id": "4c72fdc9-2a58-4f64-a331-0b7619e52a7e",
       "name": "GitLab Create Branch",
       "description": "Erstellt einen neuen Branch in einem GitLab-Repository. Benötigt: project_id, branch_name (neuer Branch), source_branch (Quell-Branch wie main/master).",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1190,12 +1215,12 @@
         1440,
         1008
       ],
-      "id": "ab95706f-d185-4bee-a529-0c95864c1193",
+      "id": "65a919e7-9b69-434e-a4b7-8a418db579ab",
       "name": "GitLab List Branches",
       "description": "Listet alle Branches eines GitLab-Repositories auf. Optional mit Suchfilter.",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1217,12 +1242,12 @@
         1744,
         1008
       ],
-      "id": "69b1683a-a6eb-448a-bce5-f0a20fab4764",
+      "id": "53627b53-7d75-40b8-af8d-131e72bb0d77",
       "name": "GitLab Get File",
       "description": "Liest eine Datei aus dem Repository. Der Inhalt ist Base64-encoded. Dateipfad muss URL-encoded sein (/ wird zu %2F).",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1248,12 +1273,12 @@
         2064,
         1008
       ],
-      "id": "8a0d51b0-9257-4ad3-9a78-729c4aeefa5d",
+      "id": "37f495b9-e1e1-48d9-96e7-e2c6f600714b",
       "name": "GitLab Create Issue",
       "description": "Erstellt ein neues Issue im GitLab-Projekt. Unterstützt Titel, Beschreibung (Markdown) und Labels.",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1275,12 +1300,12 @@
         1936,
         864
       ],
-      "id": "0c1ced65-7f65-4915-af8b-62c254238384",
+      "id": "25391c47-df7a-4f32-8be4-a0f17d6142c5",
       "name": "GitLab List Issues",
       "description": "Listet Issues eines Projekts auf. Filterbar nach Status (opened/closed/all) und Suchbegriff.",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1306,12 +1331,12 @@
         2112,
         864
       ],
-      "id": "a6338b3c-1fa3-4a7c-8c36-d6aca6b26132",
+      "id": "1db3fb70-1943-4e20-82c6-8cafccc984fe",
       "name": "GitLab Create Merge Request",
       "description": "Erstellt einen Merge Request von einem Branch in einen anderen. Ideal nach Abschluss von Änderungen auf einem Feature-Branch.",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1333,12 +1358,12 @@
         1600,
         1008
       ],
-      "id": "b15e09c7-aed6-4d72-8275-17e116d2d79b",
+      "id": "2dce4c04-9ca0-4d07-a83c-d42510d34033",
       "name": "GitLab List Folders",
       "description": "Listet Dateien und Ordner in einem Repository-Verzeichnis auf. Kann rekursiv alle Dateien anzeigen.",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1360,12 +1385,12 @@
         1616,
         864
       ],
-      "id": "1e96517e-41d5-4930-a6f1-3d6952c45c4c",
+      "id": "8cab1f46-b345-444d-8f62-8fa54ad03c74",
       "name": "GitLab List Commits",
       "description": "Zeigt die Commit-Historie eines Branches an. Nützlich um den aktuellen Stand zu verstehen.",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1401,11 +1426,11 @@
         2288,
         864
       ],
-      "id": "577aca09-1beb-4548-862a-39d7d99520c6",
+      "id": "61f8c6c1-c3d0-4aad-a6ce-8bec62a5c46e",
       "name": "GitLab List Projects",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1437,32 +1462,14 @@
         2224,
         1008
       ],
-      "id": "d82beb28-ced2-4b83-ac88-8f3394bef7d7",
+      "id": "01c19c8d-d9d9-436c-b1c6-815ec81b0c6f",
       "name": "GitLab List Users",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
-    },
-    {
-      "parameters": {
-        "promptType": "define",
-        "text": "={{ $json.chatInput + \"\\n\\n<context>\\n\" + ($json.rag_context || \"\") + \"\\n</context>\" }}",
-        "options": {
-          "systemMessage": "You are a SINGLE AI AGENT for professional software development.\n\nYou combine:\n- Planning\n- Research (RAG + Web)\n- Code creation\n- GitLab interaction (read/write/commit)\n\nThere are NO other agents.\nThere is NO chat archive.\nThere is NO archive search.\n\nABSOLUTE RULES (NON-NEGOTIABLE)\n========================\n1) SOURCE OF TRUTH (HART)\n- Chat context is NEVER the current project status.\n- The order is strict:\n  1. GitLab (current status)\n  2. RAG (snapshot/knowledge base)\n  3. WebSearch (references)\n  4. Own knowledge (conceptual only)\n\n- If project / branch / file / path is mentioned:\n  → GitLab tool MUST be used.\n- If snapshot/documentation is sought:\n  → Use RAG tools.\n- If standards / RFC / official documentation are missing:\n  → Use WebSearch.\n\nGuessing is PROHIBITED.\n\n1.1) RAG – IMAGE RENDERING (MANDATORY)\n- If the RAG system returns image links (e.g. \"https://s3.ai-lab.raspilab.de/n8n/image_1757270371195_m5323a.png\"):\n  → ALWAYS render them in the chat as Markdown images, never as plain text URLs.\n- Format is mandatory:\n  ![RAG Image](<FULL_IMAGE_URL>)\n- The images MUST appear in the correct position relative to the surrounding text.\n  → Preserve the original order exactly:\n    Text + Image → Text + Image → ...\n- NEVER move all images to the beginning or end of the message.\n- URL integrity is mandatory:\n  → Do NOT remove or shorten any query parameters or URL parts.\n  → Always output the full URL exactly as provided (including any URL parameters).\n\n2) CODE CREATION (CODEGEN RULES – MANDATORY)\nYou MAY write code yourself.\nYou MUST comply with ALL of the following rules:\n\n2.1) Sources & Style\n- No copy-paste from external sources.\n- External content is for REFERENCE only.\n- Existing project style must be strictly adhered to.\n- Images and documents from the RAG system or GitLab server are not external sources.\n\n2.2) Source priority (descending)\n1. Standards / specifications (RFC, W3C, ECMA, NIST)\n2. Official documentation (Qt, OpenSSL, language specs)\n3. Technical literature / papers\n4. Established community documents\n5. Forums (only supplementary)\n\n2.3) Mandatory header for EVERY new file\n/**\n * @file <filename>\n * @brief <short description>\n * @references\n *   - <source 1>\n *   - <source 2>\n */\n\n- Maximum of 3–4 references\n- No URLs\n- Short, precise descriptions\n\n2.4) Security\n- NO real passwords, keys, tokens\n- ALWAYS use placeholders: <EXAMPLE_PASSWORD>, <API_KEY>\n- Focus on structure, not sample data\n\n2.5) Unclear sources\n- Explain conceptually first\n- Explicitly mark uncertainties\n- Openly name missing sources\n\n3) DISPLAYING/READING FILES FROM GITLAB\n- For “display file,” “full content,” “entire code”:\n  → GitLab Get File is MANDATORY\n- Summaries are PROHIBITED\n- If content cannot be delivered:\n  → State error + reason4) GITLAB – WRITING / COMMITS (EXTREMELY STRICT)\n\nA) Confirmation requirement\n- Every write operation (create/update file, branch, MR, issue) only after explicit user confirmation:\n  “Yes,” “Confirmed,” “Execute.”\n\nB) Never main/master\n- Write operations on main/master are prohibited.\n\nC) Mandatory procedure for file updates (Update File)\n1. GitLab Get File (load current content) – MANDATORY\n2. Prepare changes locally/conceptually\n3. Show users the planned changes (diff or marked areas) – MANDATORY\n4. Wait for user confirmation – MANDATORY\n5. Execute GitLab Update File – MANDATORY\n6. Validate success – MANDATORY:\n   - If tool response contains a commit SHA: output.\n   - If tool response does NOT contain a commit SHA: DO NOT consider this an error.\n     Then: Call GitLab List Commits (branch, limit=1) and output the latest SHA.\n\nD) Mandatory procedure for new files (Create File)\n1. Check whether file exists (optionally via GitLab Get File / List Folders)\n2. Prepare content\n3. Show user content/changes – MANDATORY\n4. Wait for user confirmation – MANDATORY\n5. Execute GitLab Create File – MANDATORY\n6. Validate success as above (SHA only via List Commits, if not in response)\n\nE) One write operation per step\n- Exactly one write operation per tool call.\n- Additional READ calls (Get File / List Commits) are allowed and often mandatory.\n  (“one write op” means: not multiple writes in one step, not: no reads)\n\nF) Error handling\n- Display errors unchanged.\n- No sugarcoating, no fabricated successes.\n\n5) TOOL HONESTY\n- You must NEVER claim to have used a tool\n  if no tool call was made.\n- “Loaded from GitLab” is only allowed with Tool Result.\n- If something cannot be verified: say so.\n\n6) WEB SEARCH (REFERENCES ONLY)\n- WebSearch serves EXCLUSIVELY as a reference source\n- No internal project knowledge\n- No code fragments from the project\n- No internal names, paths, classes\n\n7) WORKING METHOD (ALWAYS)\nA) Analyze the task\n- What? Where? Why? Goal?\n- Need to read? → GitLab\n- Need knowledge? → RAG / Web\n\nB) Action\n- Read → Tool\n- Write → Suggestion → Confirmation → Tool\n\nC) Final check (MANDATORY)\n- [ ] Which tools were used?\n- [ ] Which source was the source of truth?\n- [ ] Was it written? Commit SHA?\n- [ ] Open confirmations?\n\n8) GITLAB PROJECT ID RULE (HART)\n- For any GitLab tool: project_id must be a numeric integer.\n- Never pass project name/path as project_id.\n- If only a project name is known: ALWAYS call \"GitLab List Projects\" first and copy the numeric ID.\n\nMEMORY AID\n========================\nIf you don't have it from a tool, then you don't know it.\nThen: Use the tool or openly say that it is unknown.\n\nAlways respond in German.",
-          "returnIntermediateSteps": false
-        }
-      },
-      "id": "8abaae92-410f-4c22-a795-ae94479077d0",
-      "name": "AI Tool Agent",
-      "type": "@n8n/n8n-nodes-langchain.agent",
-      "typeVersion": 1.6,
-      "position": [
-        688,
-        448
-      ]
     },
     {
       "parameters": {
@@ -1477,7 +1484,7 @@
         544
       ],
       "typeVersion": 1,
-      "id": "fc7abf52-72da-425c-bf47-71201375b2a1",
+      "id": "7d5d08da-f1cf-4f93-b741-40656538d8d0",
       "name": "Sticky Note10"
     },
     {
@@ -1501,12 +1508,12 @@
         1776,
         864
       ],
-      "id": "37e3ef4a-3895-404e-a9ca-9ef12a0dd9c3",
+      "id": "23631058-7574-419b-85b7-c7ed4016665b",
       "name": "GitLab Update File",
       "description": "Aktualisiert eine existierende Datei im Repository (Einchecken). Erstellt einen Commit mit der Änderung.",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1532,32 +1539,35 @@
         1888,
         1008
       ],
-      "id": "88fb1bd2-55b6-4383-a103-9097ca545f49",
+      "id": "4e82cd48-7ab0-4824-8548-75360007a7d3",
       "name": "Gitlab Create File",
       "description": "Erstellt eine neue Datei im Repository mit einem Commit. Dateipfad muss URL-encoded sein.",
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
     },
     {
       "parameters": {
-        "modelSource": "inferenceProfile",
-        "model": "eu.anthropic.claude-opus-4-5-20251101-v1:0",
-        "options": {
-          "maxTokensToSample": 60000
-        }
+        "model": "openai.gpt-oss-120b-1:0",
+        "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatAwsBedrock",
       "typeVersion": 1.1,
       "position": [
-        176,
+        16,
         624
       ],
-      "id": "eab66878-ca3b-414c-a6f3-fc0acc152a46",
+      "id": "28904b86-02af-4c1a-8220-382bb3f13deb",
       "name": "AWS Bedrock EU Anthropic Claude Opus 4.5",
+      "credentials": {
+        "aws": {
+          "id": "azjHlu1TqDYyQs88",
+          "name": "AWS (IAM) account"
+        }
+      },
       "disabled": true
     },
     {
@@ -1576,7 +1586,7 @@
         320,
         624
       ],
-      "id": "e628707e-1bbc-4388-a4a5-e1db9cca8f7a",
+      "id": "df62a703-8ace-4fca-8f19-9f687fd6754b",
       "name": "Anthropic Chat Model",
       "disabled": true
     },
@@ -1593,7 +1603,7 @@
         1200
       ],
       "typeVersion": 1,
-      "id": "adb382a9-bb68-418b-897b-909f2f2318ba",
+      "id": "9a495a67-b66f-4a8e-b5ce-573f2ea43212",
       "name": "Sticky Note1"
     },
     {
@@ -1634,7 +1644,7 @@
         224,
         1472
       ],
-      "id": "c67d6808-d19a-4b95-9f3a-6fce3d577cc6",
+      "id": "aba24668-6933-4809-969f-d1c5432efa06",
       "name": "Normalize Input"
     },
     {
@@ -1651,7 +1661,7 @@
         432,
         2320
       ],
-      "id": "68d6eb30-90dd-4da0-92b8-6688fd5a3e14",
+      "id": "81a87c88-f629-4b7a-af30-768b6b7b5fd7",
       "name": "Get Project/Owner/Branch"
     },
     {
@@ -1672,12 +1682,12 @@
         624,
         2320
       ],
-      "id": "84a89b61-4537-4339-bd45-7af31a70503b",
+      "id": "70c1405b-e89a-4555-909d-8b39ea00c29c",
       "name": "Get Filelist from Server",
       "executeOnce": false,
       "credentials": {
         "gitlabApi": {
-          "id": "6QAotc5DpEvII8wa",
+          "id": "Cq2SfGhbsBeq6YlM",
           "name": "GitLab account"
         }
       }
@@ -1720,7 +1730,7 @@
         928,
         2320
       ],
-      "id": "9b119019-b71e-4dc3-b293-2e58ba5a26aa",
+      "id": "e0158a7d-eca9-4b2a-8dcd-a98f75a17bae",
       "name": "Edit Fields"
     },
     {
@@ -1753,7 +1763,7 @@
         784,
         2320
       ],
-      "id": "a6213454-308e-417f-a182-039dc681af0c",
+      "id": "72baf597-90c0-4bee-a5db-46172896e157",
       "name": "Files Only"
     },
     {
@@ -1790,7 +1800,7 @@
         1104,
         2224
       ],
-      "id": "645fe031-8bf5-40e3-ac25-e6cf6d3b4017",
+      "id": "294229e4-1a44-4cf4-9a6b-8ce73434ff67",
       "name": "Merge"
     },
     {
@@ -1803,7 +1813,7 @@
         1328,
         2224
       ],
-      "id": "9bfd2bcf-406d-44ba-8172-382f6a4dc82e",
+      "id": "02f578cd-1e1c-4209-9602-ad3bf61d6d29",
       "name": "Old Files"
     },
     {
@@ -1819,7 +1829,7 @@
         2160
       ],
       "typeVersion": 1,
-      "id": "aeabacfa-7c92-4e72-8bdd-faa7e03ef233",
+      "id": "3139ad1c-0039-4837-8f8b-b144673def8d",
       "name": "Sticky Note4"
     },
     {
@@ -1952,12 +1962,12 @@
         2080,
         1504
       ],
-      "id": "9c2ef0b5-5a14-4264-8e8d-09657ad0d51b",
+      "id": "e1cea339-7199-428b-8a34-681f715ce963",
       "name": "Insert Document Metadata",
       "executeOnce": true,
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -1976,11 +1986,11 @@
         1904,
         1504
       ],
-      "id": "78ca2b55-ec30-409d-9ba3-f6d3b7c42015",
+      "id": "787e63e8-2dea-4c17-855f-b057bf6a1cf9",
       "name": "Delete Old Documents",
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -1997,13 +2007,13 @@
         1312,
         1488
       ],
-      "id": "5f78a151-0d54-42c2-ad64-842eb7cc2bc8",
+      "id": "4680bcca-a0c2-4d28-8db7-3e77f34ab856",
       "name": "List Postgres Documents",
       "alwaysOutputData": true,
       "executeOnce": true,
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -2020,11 +2030,11 @@
         880,
         864
       ],
-      "id": "d0cb4735-ffd2-4a99-a1b9-17196d6fc151",
+      "id": "d13ba2e3-a18c-4c0c-bd92-1f9794c9826c",
       "name": "WebSearch (SearchApi)",
       "credentials": {
         "serpApi": {
-          "id": "5AJqlk7GfZNfrw0r",
+          "id": "6MuhEooCVMq7Nam9",
           "name": "SerpAPI account"
         }
       }
@@ -2033,9 +2043,9 @@
       "parameters": {
         "workflowId": {
           "__rl": true,
-          "value": "LFr4Vh2SeGUGZifnSEQVy",
+          "value": "XAdGYq-gfg3cXykIBed8w",
           "mode": "list",
-          "cachedResultUrl": "/workflow/LFr4Vh2SeGUGZifnSEQVy",
+          "cachedResultUrl": "/workflow/XAdGYq-gfg3cXykIBed8w",
           "cachedResultName": "OCR-Workflow"
         },
         "workflowInputs": {
@@ -2055,7 +2065,7 @@
         1584
       ],
       "name": "Call OCR-Workflow",
-      "id": "472d6059-886a-4001-ace2-1230f9663945"
+      "id": "70ee787a-3c8c-4bbd-9af5-7edb2669c583"
     },
     {
       "parameters": {
@@ -2067,11 +2077,11 @@
         3664,
         1856
       ],
-      "id": "0995e451-4894-4ae3-b398-58056cbc6aff",
+      "id": "a542e110-252c-4adb-b941-ffcd2f09ded9",
       "name": "Embeddings Ollama",
       "credentials": {
         "ollamaApi": {
-          "id": "OU561CFo570kuhq7",
+          "id": "BSseGqFf8xesTraE",
           "name": "Ollama account"
         }
       }
@@ -2086,35 +2096,14 @@
         992,
         1024
       ],
-      "id": "7b2376b8-35d5-4cd1-8bf1-273c69bb8625",
+      "id": "fb55653e-c714-4166-8a38-e1695b525820",
       "name": "Embeddings Ollama1",
       "credentials": {
         "ollamaApi": {
-          "id": "OU561CFo570kuhq7",
+          "id": "BSseGqFf8xesTraE",
           "name": "Ollama account"
         }
       }
-    },
-    {
-      "parameters": {
-        "model": "llama3.1:8b",
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
-      "typeVersion": 1,
-      "position": [
-        16,
-        624
-      ],
-      "id": "6615f8bb-60cd-4f72-8bd4-ae022db4a6ad",
-      "name": "llama3.1:8b",
-      "credentials": {
-        "ollamaApi": {
-          "id": "OU561CFo570kuhq7",
-          "name": "Ollama account"
-        }
-      },
-      "disabled": true
     },
     {
       "parameters": {
@@ -2127,11 +2116,11 @@
         656,
         224
       ],
-      "id": "c6a53c9c-c61d-42ad-9440-c725e829398d",
+      "id": "bc592818-9568-4971-96a5-ce168f91149b",
       "name": "llama3.2:3b",
       "credentials": {
         "ollamaApi": {
-          "id": "OU561CFo570kuhq7",
+          "id": "BSseGqFf8xesTraE",
           "name": "Ollama account"
         }
       }
@@ -2147,11 +2136,11 @@
         3344,
         1856
       ],
-      "id": "febaa51d-93a2-4a98-97d9-532ee1a68434",
+      "id": "1143cd80-6818-4ac7-804e-cf1436d2511c",
       "name": "embed-v-4-",
       "credentials": {
         "azureOpenAiApi": {
-          "id": "3o7EUGIGbieKbLTQ",
+          "id": "2fib0Fsn4iWUagmI",
           "name": "Azure Open AI account"
         }
       },
@@ -2169,11 +2158,11 @@
         256,
         848
       ],
-      "id": "d445f983-39ff-47b3-83a1-a3dd4cf01534",
+      "id": "a814cfd5-9a9a-4d60-8ad7-112d729e5f1c",
       "name": "Create Vector-Extension",
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -2189,11 +2178,11 @@
         656,
         1024
       ],
-      "id": "02b93f26-e819-49e9-b432-8d1bd16dd74c",
+      "id": "d5952cc5-04e0-4f51-b01b-e95d98ac943f",
       "name": "embed-v-4-0",
       "credentials": {
         "azureOpenAiApi": {
-          "id": "3o7EUGIGbieKbLTQ",
+          "id": "2fib0Fsn4iWUagmI",
           "name": "Azure Open AI account"
         }
       },
@@ -2211,11 +2200,11 @@
         256,
         1008
       ],
-      "id": "b5c37106-739c-4b3a-856e-7179d944da77",
+      "id": "0f825106-b9f1-4f94-a392-d5a674c545d3",
       "name": "Clear Tables",
       "credentials": {
         "postgres": {
-          "id": "C9HJDvSGuGapYQYL",
+          "id": "Xu4u1zK3EKZuPCkV",
           "name": "Postgres account"
         }
       }
@@ -2232,7 +2221,7 @@
         2896,
         1536
       ],
-      "id": "abc37aea-d600-4cc6-a800-6e3a483e271f",
+      "id": "b4ca2d42-e8ca-4561-a29d-70feff83e52a",
       "name": "Insert Metadata"
     },
     {
@@ -2246,8 +2235,46 @@
         3104,
         1536
       ],
-      "id": "2c817374-3fba-42d2-af31-435a0d1c74d5",
+      "id": "8c832d31-1ceb-49a5-8366-4ef097569825",
       "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "model": "gpt-oss:20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOllama",
+      "typeVersion": 1,
+      "position": [
+        656,
+        640
+      ],
+      "id": "e342f670-9ece-4a5f-bd07-d9b446c8f1bd",
+      "name": "gpt-oss:20b",
+      "credentials": {
+        "ollamaApi": {
+          "id": "BSseGqFf8xesTraE",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput + \"\\n\\n<context>\\n\" + ($json.rag_context || \"\") + \"\\n</context>\" }}",
+        "options": {
+          "systemMessage": "You are a helpYou are a SINGLE AI AGENT for professional software development.\n\nYou combine:\n- Planning\n- Research (RAG + Web)\n- Code creation\n- GitLab interaction (read/write/commit)\n\nThere are NO other agents.\nThere is NO chat archive.\nThere is NO archive search.\n\nABSOLUTE RULES (NON-NEGOTIABLE)\n========================\n1) SOURCE OF TRUTH (HART)\n- Chat context is NEVER the current project status.\n- The order is strict:\n  1. GitLab (current status)\n  2. RAG (snapshot/knowledge base)\n  3. WebSearch (references)\n  4. Own knowledge (conceptual only)\n\n- If project / branch / file / path is mentioned:\n  → GitLab tool MUST be used.\n- If snapshot/documentation is sought:\n  → Use RAG tools.\n- If standards / RFC / official documentation are missing:\n  → Use WebSearch.\n\nGuessing is PROHIBITED.\n\n1.1) RAG – IMAGE RENDERING (MANDATORY)\n- If the RAG system returns image links (e.g. \"https://s3.ai-lab.raspilab.de/n8n/image_1757270371195_m5323a.png\"):\n  → ALWAYS render them in the chat as Markdown images, never as plain text URLs.\n- Format is mandatory:\n  ![RAG Image](<FULL_IMAGE_URL>)\n- The images MUST appear in the correct position relative to the surrounding text.\n  → Preserve the original order exactly:\n    Text + Image → Text + Image → ...\n- NEVER move all images to the beginning or end of the message.\n- URL integrity is mandatory:\n  → Do NOT remove or shorten any query parameters or URL parts.\n  → Always output the full URL exactly as provided (including any URL parameters).\n\n2) CODE CREATION (CODEGEN RULES – MANDATORY)\nYou MAY write code yourself.\nYou MUST comply with ALL of the following rules:\n\n2.1) Sources & Style\n- No copy-paste from external sources.\n- External content is for REFERENCE only.\n- Existing project style must be strictly adhered to.\n- Images and documents from the RAG system or GitLab server are not external sources.\n\n2.2) Source priority (descending)\n1. Standards / specifications (RFC, W3C, ECMA, NIST)\n2. Official documentation (Qt, OpenSSL, language specs)\n3. Technical literature / papers\n4. Established community documents\n5. Forums (only supplementary)\n\n2.3) Mandatory header for EVERY new file\n/**\n * @file <filename>\n * @brief <short description>\n * @references\n *   - <source 1>\n *   - <source 2>\n */\n\n- Maximum of 3–4 references\n- No URLs\n- Short, precise descriptions\n\n2.4) Security\n- NO real passwords, keys, tokens\n- ALWAYS use placeholders: <EXAMPLE_PASSWORD>, <API_KEY>\n- Focus on structure, not sample data\n\n2.5) Unclear sources\n- Explain conceptually first\n- Explicitly mark uncertainties\n- Openly name missing sources\n\n3) DISPLAYING/READING FILES FROM GITLAB\n- For “display file,” “full content,” “entire code”:\n  → GitLab Get File is MANDATORY\n- Summaries are PROHIBITED\n- If content cannot be delivered:\n  → State error + reason4) GITLAB – WRITING / COMMITS (EXTREMELY STRICT)\n\nA) Confirmation requirement\n- Every write operation (create/update file, branch, MR, issue) only after explicit user confirmation:\n  “Yes,” “Confirmed,” “Execute.”\n\nB) Never main/master\n- Write operations on main/master are prohibited.\n\nC) Mandatory procedure for file updates (Update File)\n1. GitLab Get File (load current content) – MANDATORY\n2. Prepare changes locally/conceptually\n3. Show users the planned changes (diff or marked areas) – MANDATORY\n4. Wait for user confirmation – MANDATORY\n5. Execute GitLab Update File – MANDATORY\n6. Validate success – MANDATORY:\n   - If tool response contains a commit SHA: output.\n   - If tool response does NOT contain a commit SHA: DO NOT consider this an error.\n     Then: Call GitLab List Commits (branch, limit=1) and output the latest SHA.\n\nD) Mandatory procedure for new files (Create File)\n1. Check whether file exists (optionally via GitLab Get File / List Folders)\n2. Prepare content\n3. Show user content/changes – MANDATORY\n4. Wait for user confirmation – MANDATORY\n5. Execute GitLab Create File – MANDATORY\n6. Validate success as above (SHA only via List Commits, if not in response)\n\nE) One write operation per step\n- Exactly one write operation per tool call.\n- Additional READ calls (Get File / List Commits) are allowed and often mandatory.\n  (“one write op” means: not multiple writes in one step, not: no reads)\n\nF) Error handling\n- Display errors unchanged.\n- No sugarcoating, no fabricated successes.\n\n5) TOOL HONESTY\n- You must NEVER claim to have used a tool\n  if no tool call was made.\n- “Loaded from GitLab” is only allowed with Tool Result.\n- If something cannot be verified: say so.\n\n6) WEB SEARCH (REFERENCES ONLY)\n- WebSearch serves EXCLUSIVELY as a reference source\n- No internal project knowledge\n- No code fragments from the project\n- No internal names, paths, classes\n\n7) WORKING METHOD (ALWAYS)\nA) Analyze the task\n- What? Where? Why? Goal?\n- Need to read? → GitLab\n- Need knowledge? → RAG / Web\n\nB) Action\n- Read → Tool\n- Write → Suggestion → Confirmation → Tool\n\nC) Final check (MANDATORY)\n- [ ] Which tools were used?\n- [ ] Which source was the source of truth?\n- [ ] Was it written? Commit SHA?\n- [ ] Open confirmations?\n\n8) GITLAB PROJECT ID RULE (HART)\n- For any GitLab tool: project_id must be a numeric integer.\n- Never pass project name/path as project_id.\n- If only a project name is known: ALWAYS call \"GitLab List Projects\" first and copy the numeric ID.\n\nMEMORY AID\n========================\nIf you don't have it from a tool, then you don't know it.\nThen: Use the tool or openly say that it is unknown.\n\nAlways respond in German.ful assistant",
+          "enableStreaming": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        688,
+        448
+      ],
+      "id": "fe8e73a6-7cd9-4109-8068-be3568af2d5a",
+      "name": "AI Agent"
     }
   ],
   "pinData": {},
@@ -2434,7 +2461,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2474,7 +2501,7 @@
         ],
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "main",
             "index": 0
           }
@@ -2496,7 +2523,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2564,13 +2591,7 @@
     },
     "Azure OpenAI Chat Model": {
       "ai_languageModel": [
-        [
-          {
-            "node": "AI Tool Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Get a Projectfile": {
@@ -2628,7 +2649,7 @@
       "ai_memory": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_memory",
             "index": 0
           }
@@ -2661,19 +2682,8 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "AI Tool Agent": {
-      "main": [
-        [
-          {
-            "node": "Set output",
-            "type": "main",
             "index": 0
           }
         ]
@@ -2794,7 +2804,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2805,7 +2815,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2816,7 +2826,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2827,7 +2837,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2838,7 +2848,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2849,7 +2859,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2860,7 +2870,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2871,7 +2881,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2882,7 +2892,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2893,7 +2903,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2904,7 +2914,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2915,7 +2925,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2926,7 +2936,7 @@
       "ai_tool": [
         [
           {
-            "node": "AI Tool Agent",
+            "node": "AI Agent",
             "type": "ai_tool",
             "index": 0
           }
@@ -2998,6 +3008,43 @@
           }
         ]
       ]
+    },
+    "gpt-oss:20b": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AWS Bedrock EU Anthropic Claude Opus 4.5": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Set output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "Reranker Cohere": {
+      "ai_reranker": [
+        []
+      ]
     }
   },
   "active": true,
@@ -3005,10 +3052,10 @@
     "executionOrder": "v1",
     "availableInMCP": false
   },
-  "versionId": "a4672aef-5ac9-44f3-b6a9-0f2a941cb9a7",
+  "versionId": "7e808f9d-6fc1-44e8-a1dd-0419c420d5e3",
   "meta": {
-    "instanceId": "2c715e088440d40221edbeca8c7cc5a511019c803826b88074d6ddffa66f0bab"
+    "instanceId": "0b642c24244c9131736e3116bc5771dcc548e8749bdd9ed256dceeaa51f05a56"
   },
-  "id": "0u_jOVrp2m5jejj0rsg2a",
+  "id": "_pZu3Uc2CMBPC9q_2W70H",
   "tags": []
 }
